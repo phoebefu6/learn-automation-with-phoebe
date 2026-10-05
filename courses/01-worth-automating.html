@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Session 1 of 6. The break-even line for any automation: how often, how many minutes, how long the task will live, against the hours to build and keep it. xkcd 1205 read cell by cell, the costs it leaves out, and the SRE argument that time is not the only return.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Is it worth the time? - learn automation with phoebe">
+<meta property="og:description" content="Session 1 of 6. Frequency x minutes x lifetime against build plus upkeep, and the two costs every chart forgets.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-automation-with-phoebe/courses/01-worth-automating.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Is it worth the time? - learn automation with phoebe">
+<meta name="twitter:description" content="Session 1 of 6. The break-even line, read honestly.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Session 1 · Is it worth the time? - learn automation with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-automation-with-phoebe</a> / Session 1 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn Automation with Phoebe · Session 1 of 6</div>
+    <h1>Is it worth <span class="accent">the time</span>?</h1>
+    <p class="sub">Every automation starts as a feeling: "I do this every week and it is boring." Tonight the feeling becomes a line on a chart. On one side, how often the task happens, how many minutes each run takes, and how long the task will still exist. On the other, the hours to build it and the minutes a month to keep it working. Where the two lines cross is the break-even, and most people never draw it. We read xkcd 1205 cell by cell, add the two costs it leaves out, hear the Google SRE argument that time is not the only return, and leave with one task worth building in session 2.</p>
+    <div class="chip-row">
+      <span class="chip level">🟢 Foundations</span>
+      <span class="chip audience">Anyone who repeats a task</span>
+      <span class="chip audience">No code required, Python optional</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:4">3-18 · The line, its gaps, the counter-argument</span>
+      <span class="a3" style="flex:5">18-40 · Build-along: price five of your own tasks</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where we start</h2>
+    </div>
+    <p class="lede">These six sessions are about automations that do not break: a form that becomes a CRM record, an order that becomes a text message, a file that gets renamed and filed. Before any tool is opened, one question decides whether the rest is worth doing. Is this task frequent enough, long enough, and alive long enough to pay back the hours it takes to build and keep running? The question has arithmetic, and the arithmetic has two holes that cost more than the build.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">★ Build-along = run it yourself</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> A break-even number for five tasks you actually repeat, with build and upkeep in it; the ability to read any cell of xkcd 1205 and say what unit it is in; and one candidate task written as a single sentence, "when X happens, do Y", ready to wire up in session 2.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers the break-even line, xkcd 1205</span>
+      <h2>Frequency, minutes, lifetime</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The saving grows a little every time the task happens. The cost arrives mostly at once, as build hours, and then trickles in as upkeep. Draw both against weeks and you get two lines. The saving line starts at zero and climbs; the cost line starts high and climbs slowly. They cross once, if at all, and that week is the only number the decision needs.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn lines over 52 weeks for renaming and filing invoice PDFs, 10 times a week at 2 minutes each. The hours-saved line starts at zero and climbs to about 17 hours. The hours-spent line starts at the 3 build hours and climbs slowly with 15 minutes of upkeep a month to about 6 hours. They cross at week 11, the break-even. A side panel spells out the two formulas.">
+        <defs>
+          <filter id="s1aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s1aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s1aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s1aH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s1aL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s1aS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s1aB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s1aV { font: 800 16px Inter, sans-serif; fill: #0A4A92; }
+          .s1aA { font: 700 11px Inter, sans-serif; fill: #0A64C4; }
+          .s1aN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s1aH" x="30" y="26">ONE TASK, TWO LINES</text>
+        <text class="s1aS" x="190" y="26">rename and file invoice PDFs: 10 a week, 2 minutes each, 3 hours to build</text>
+
+        <g filter="url(#s1aSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- axes -->
+          <path d="M90 260 L626 260" stroke="#4D5D74"/>
+          <path d="M90 260 L90 54" stroke="#4D5D74"/>
+          <!-- the hatched gap after break-even -->
+          <path d="M202 219 L620 67 L620 193 Z" fill="url(#s1aHc)" stroke="none"/>
+          <!-- saved line -->
+          <path d="M90 260 L620 67" stroke="#0A64C4" stroke-width="3"/>
+          <!-- spent line: build jump then upkeep slope -->
+          <path d="M90 260 L90 227 L620 193" stroke="#B5480C" stroke-width="3"/>
+          <!-- break-even dot -->
+          <circle cx="202" cy="219" r="7" fill="#B5480C" stroke="#B5480C"/>
+          <!-- side panel -->
+          <rect x="654" y="56" width="200" height="200" rx="10" transform="rotate(0.5 754 156)" fill="#EBF3FD"/>
+        </g>
+
+        <text class="s1aA" x="96" y="50">hours</text>
+        <text class="s1aS" x="90" y="278" text-anchor="middle">0</text>
+        <text class="s1aS" x="355" y="278" text-anchor="middle">26</text>
+        <text class="s1aS" x="620" y="278" text-anchor="middle">52 weeks</text>
+
+        <text class="s1aL" x="230" y="98">hours saved</text>
+        <text class="s1aS" x="230" y="114">10 x 2 min, every week</text>
+        <text class="s1aL" x="430" y="226">hours spent</text>
+        <text class="s1aS" x="430" y="242">3 to build, 15 min a month after</text>
+        <text class="s1aB" x="214" y="250">break-even, week 11</text>
+        <text class="s1aV" x="470" y="160">+11 h</text>
+        <text class="s1aS" x="470" y="176">net by week 52</text>
+
+        <text class="s1aH" x="670" y="82">THE TWO LINES</text>
+        <text class="s1aL" x="670" y="106">saved =</text>
+        <text class="s1aS" x="670" y="122">times a week x minutes</text>
+        <text class="s1aS" x="670" y="138">x weeks it stays alive</text>
+        <text class="s1aL" x="670" y="166">spent =</text>
+        <text class="s1aS" x="670" y="182">build hours, then</text>
+        <text class="s1aS" x="670" y="198">upkeep x months alive</text>
+        <text class="s1aB" x="670" y="226">worth it when saved</text>
+        <text class="s1aB" x="670" y="242">passes spent in time</text>
+
+        <text class="s1aN" x="30" y="308">The week the lines cross is the decision. If the task will be gone before then, the build never pays back.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the hatched wedge is the only part of the automation that is profit; everything left of the dot is a loan</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span>The three numbers on the saving side, and the one people skip<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>How often.</strong> Count it, do not remember it. "Every day" is usually four days a week once holidays, quiet weeks and the days someone else did it are taken out. A week of tally marks beats any estimate.</p>
+        <p><strong>How many minutes.</strong> The minutes the automation removes, not the minutes the task takes. If the automation still leaves you to check the result, that check stays on your side of the ledger.</p>
+        <p><strong>How long the task lives.</strong> The number nobody writes down. Tools change, the report gets cancelled, the client leaves, the form gets a new field. A saving of 20 minutes a week is worth 17 hours a year and nothing at all after the task disappears. Ask the person who owns the process how long they expect it to exist, and use the shorter of their answer and three years.</p>
+        <p>Multiply the three and you have the most you can afford to spend. Compare it with the build hours plus upkeep and you have the decision.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>Reading xkcd 1205 without misreading it<span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Randall Munroe's <a href="https://xkcd.com/1205/">"Is It Worth the Time?"</a> (xkcd 1205, 29 April 2013) is the same calculation done once for a grid of cases. Its question, paraphrased from the comic: how long can you work on making a routine task more efficient before you are spending more time than you save, across five years. Columns are how often you do the task (50 a day down to yearly); rows are how much time you shave off (1 second up to 1 day). Each cell is the build budget.</p>
+        <table class="clean">
+          <tr><th>Shave off</th><th>How often</th><th>The chart says</th><th>The arithmetic</th></tr>
+          <tr><td>5 minutes</td><td>daily</td><td><strong>6 days</strong></td><td>5 x 365 x 5 = 9,125 min = 152 h = 6.3 days of 24 hours</td></tr>
+          <tr><td>1 hour</td><td>weekly</td><td><strong>10 days</strong></td><td>52 x 5 = 260 h = 10.8 days; the chart rounds down</td></tr>
+          <tr><td>30 seconds</td><td>5 a day</td><td><strong>3 days</strong></td><td>5 x 30 s x 365 x 5 = 3.2 days</td></tr>
+          <tr><td>1 minute</td><td>daily</td><td><strong>1 day</strong></td><td>30 h, about 1.3 days</td></tr>
+          <tr><td>5 seconds</td><td>50 a day</td><td><strong>5 days</strong></td><td>50 x 5 s x 365 x 5 = 5.3 days</td></tr>
+        </table>
+        <p>Two things are easy to miss. The "days" are 24-hour days, so the 6 days for a daily five-minute task is 152 hours, which is <strong>19 working days</strong> of 8 hours. And the chart has no upkeep column: it assumes the improvement, once made, costs nothing to keep. For a keyboard shortcut that is nearly true. For anything that talks to another company's API it is not, and Part 2 is about that gap. The comic is CC BY-NC 2.5; read it at the link rather than here.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>The weekly report that outlived nobody.</strong> A common story in operations teams: someone spends two days automating a Friday spreadsheet export, the export runs perfectly for six weeks, and then the team that read it reorganises and stops asking. At one hour a week, six weeks paid back six hours of a sixteen-hour build. Nothing broke. The task simply died before the line crossed. Asking "how long will anyone want this?" first would have pointed at a ten-minute checklist instead.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers upkeep, the cost of a wrong run, the SRE counterpoint</span>
+      <h2>What the chart leaves out</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">A time-saved chart has one column for cost: building it. A running automation has at least four more. It needs fixing in its first weeks, it needs upkeep when the apps on either end change, it needs someone to look at it now and then, and every so often it does the wrong thing at machine speed. The last one is the cost that turns a good investment into an apology.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn receipts for the same invoice-filing automation over three years. The left receipt, what the chart counts, has one line: build 3 hours. The right receipt, what running it costs, has five lines: build 3 hours, first-week fixes 2 hours, upkeep 15 minutes a month for 9 hours, a broken run a quarter at 30 minutes for 6 hours, and wrong runs at a cost no timer measures. Against 52 hours saved, the net drops from 49 to 32 hours, constructed numbers.">
+        <defs>
+          <filter id="s1bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="23" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s1bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+        </defs>
+        <style>
+          .s1bH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s1bL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s1bS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s1bB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s1bV { font: 800 18px Inter, sans-serif; fill: #0A4A92; }
+          .s1bN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s1bH" x="30" y="26">THE SAME AUTOMATION, TWO RECEIPTS</text>
+        <text class="s1bS" x="300" y="26">invoice filing over three years, 52 hours saved either way · constructed numbers</text>
+
+        <g filter="url(#s1bSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- receipt A -->
+          <path d="M60 54 L330 54 L330 200 L318 210 L306 200 L294 210 L282 200 L270 210 L258 200 L246 210 L234 200 L222 210 L210 200 L198 210 L186 200 L174 210 L162 200 L150 210 L138 200 L126 210 L114 200 L102 210 L90 200 L78 210 L66 200 L60 206 Z" fill="#FFFFFF" transform="rotate(-0.8 195 130)"/>
+          <!-- receipt B -->
+          <path d="M440 54 L830 54 L830 262 L818 272 L806 262 L794 272 L782 262 L770 272 L758 262 L746 272 L734 262 L722 272 L710 262 L698 272 L686 262 L674 272 L662 262 L650 272 L638 262 L626 272 L614 262 L602 272 L590 262 L578 272 L566 262 L554 272 L542 262 L530 272 L518 262 L506 272 L494 262 L482 272 L470 262 L458 272 L446 262 L440 268 Z" fill="#FFFFFF" transform="rotate(0.6 635 160)"/>
+          <!-- the wrong-run line highlighted -->
+          <rect x="456" y="190" width="358" height="28" rx="6" fill="#FDEEE4" stroke="#B5480C"/>
+          <!-- dividers -->
+          <path d="M76 150 L314 150" stroke="#C7D4E5"/>
+          <path d="M456 228 L814 228" stroke="#C7D4E5"/>
+        </g>
+
+        <text class="s1bH" x="78" y="80">WHAT THE CHART COUNTS</text>
+        <text class="s1bL" x="78" y="108">build</text>
+        <text class="s1bL" x="300" y="108" text-anchor="end">3 h</text>
+        <text class="s1bS" x="78" y="132">nothing else, ever</text>
+        <text class="s1bS" x="78" y="172">net over three years</text>
+        <text class="s1bV" x="300" y="176" text-anchor="end">+49 h</text>
+
+        <text class="s1bH" x="458" y="80">WHAT RUNNING IT COSTS</text>
+        <text class="s1bL" x="458" y="104">build</text>
+        <text class="s1bL" x="810" y="104" text-anchor="end">3 h</text>
+        <text class="s1bL" x="458" y="126">first-week fixes</text>
+        <text class="s1bL" x="810" y="126" text-anchor="end">2 h</text>
+        <text class="s1bL" x="458" y="148">upkeep, 15 min a month</text>
+        <text class="s1bL" x="810" y="148" text-anchor="end">9 h</text>
+        <text class="s1bL" x="458" y="170">a broken run a quarter, 30 min each</text>
+        <text class="s1bL" x="810" y="170" text-anchor="end">6 h</text>
+        <text class="s1bB" x="466" y="208">a wrong run: a lost invoice, a double email</text>
+        <text class="s1bB" x="806" y="208" text-anchor="end">?</text>
+        <text class="s1bS" x="458" y="250">net over three years</text>
+        <text class="s1bV" x="810" y="252" text-anchor="end">+32 h</text>
+
+        <text class="s1bN" x="30" y="300">Still worth it, by a third less. The line marked "?" has no timer, and sessions 4 and 5 are about making it small.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the shaded line is the one cost that is paid by someone else: the customer who got the email twice</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>Four costs to add before you decide<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>First-week fixes.</strong> The first real runs find the cases the test did not: an empty field, a name with an apostrophe, a file uploaded twice. Budget about half the build again.</p>
+        <p><strong>Upkeep.</strong> An automation sits between two products that both ship updates. A renamed field, an expired connection, a changed rate limit: each one is a small repair. Fifteen minutes a month is a reasonable floor for anything that touches two other companies' software.</p>
+        <p><strong>Broken runs.</strong> Steps fail: a timeout, a 500 error, an outage. Someone has to notice, find the run, and fix or replay it. Session 5 is about making that cheap.</p>
+        <p><strong>Wrong runs.</strong> The run that "worked" and did the wrong thing: texted a customer twice, filed an invoice under the wrong client, lost an order without saying so. No timer measures it and it is often the largest cost, because a human doing the task would have noticed. Session 4 counts exactly these on one seeded day.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>The counter-argument: time is not the only return<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Google's SRE book disagrees with any time-only chart, xkcd's included. Chapter 7, <a href="https://sre.google/sre-book/automation-at-google/">"The Evolution of Automation at Google"</a> (Niall Murphy with John Looney and Michael Kacirek), lists four values: consistency, a platform you can extend and fix once, faster repairs, and time saving. Its argument is that automation "provides more than just time saving, so it's worth implementing in more cases than a simple time-expended versus time-saved calculation might suggest." A task done by hand a hundred times is not done the same way a hundred times; a script is.</p>
+        <p>The same chapter also says "doing automation thoughtlessly can create as many problems as it solves," and opens with "For SRE, automation is a force multiplier, not a panacea." Both sides are right about different things. The break-even line is the honest floor: if a task fails it on time, the automation has to be justified by something else, and that something should be said out loud ("we automate this because the manual version gets the VAT wrong one time in twenty"), not smuggled in. The engineering view of repeated manual work as toil, and how teams budget for removing it, belongs to the <a href="https://phoebefu6.github.io/learn-data-reliability-with-phoebe/courses/b7-toil.html">reliability course's toil session</a>.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>xkcd answered itself nine months later.</strong> In <a href="https://xkcd.com/1319/">xkcd 1319 "Automation"</a> (January 2014) the same author drew the plan, where writing the code takes a while and then frees up time, against what actually happens, where debugging and rethinking take over and the original task never gets done. It is a joke and also a fair description of the first-week-fixes line on the right-hand receipt above. Put both comics on the wall and the decision is honest.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers choosing the first candidate</span>
+      <h2>Which task goes first</h2>
+      <span class="tag concept">4 min live</span>
+    </div>
+    <p class="lede">The break-even line ranks tasks by time. A second question ranks them by how safely a machine can do them: are the steps the same every time? A task that is frequent and rule-like is the first candidate. A task that is frequent and needs judgement wants help, not a robot. A task that is rare and rule-like wants a checklist. Some tasks want nothing at all.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn quadrant. Horizontal axis: how often the task happens. Vertical axis: how rule-like it is, the same steps every time. Top right, automate it: copying web-form leads into the CRM, renaming and filing invoices. Top left, a checklist not a bot: the yearly tax folder. Bottom right, assist and keep a human: replying to a complaint. Bottom left, leave it alone: choosing a new supplier.">
+        <defs>
+          <filter id="s1cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="37" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s1cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".45"/></pattern>
+          <marker id="s1cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s1cH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s1cC { font: 800 12px Inter, sans-serif; fill: #0A4A92; }
+          .s1cL { font: 600 11.5px Inter, sans-serif; fill: #11233B; }
+          .s1cS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s1cB { font: 800 12px Inter, sans-serif; fill: #8A3509; }
+          .s1cA { font: 700 11px Inter, sans-serif; fill: #0A64C4; letter-spacing: .05em; }
+          .s1cN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s1cSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- top right hatched: the target corner -->
+          <rect x="460" y="44" width="356" height="146" rx="8" fill="url(#s1cHc)" stroke="none"/>
+          <!-- axes -->
+          <path d="M90 340 L820 340" marker-end="url(#s1cAr)"/>
+          <path d="M90 340 L90 40" marker-end="url(#s1cAr)"/>
+          <!-- dividers -->
+          <path d="M455 50 L455 334" stroke="#C7D4E5" stroke-dasharray="6 6"/>
+          <path d="M96 196 L814 196" stroke="#C7D4E5" stroke-dasharray="6 6"/>
+          <!-- dots -->
+          <circle cx="720" cy="100" r="7" fill="#B5480C" stroke="#B5480C"/>
+          <circle cx="600" cy="150" r="6" fill="#FFFFFF"/>
+          <circle cx="170" cy="120" r="6" fill="#FFFFFF"/>
+          <circle cx="690" cy="280" r="6" fill="#FFFFFF"/>
+          <circle cx="200" cy="290" r="6" fill="#FFFFFF"/>
+        </g>
+
+        <text class="s1cA" x="455" y="372" text-anchor="middle">HOW OFTEN IT HAPPENS</text>
+        <text class="s1cA" x="40" y="292" text-anchor="start" transform="rotate(-90 40 292)">SAME STEPS EVERY TIME</text>
+
+        <text class="s1cB" x="804" y="64" text-anchor="end">Automate it</text>
+        <text class="s1cC" x="104" y="64">A checklist, not a bot</text>
+        <text class="s1cC" x="804" y="326" text-anchor="end">Assist, keep a human</text>
+        <text class="s1cC" x="104" y="326">Leave it alone</text>
+
+        <text class="s1cL" x="580" y="104">leads into the CRM</text>
+        <text class="s1cS" x="580" y="120">25 a week, 3 min</text>
+        <text class="s1cL" x="480" y="154">invoice filing</text>
+        <text class="s1cS" x="480" y="170">10 a week, 2 min</text>
+        <text class="s1cL" x="182" y="124">yearly tax folder</text>
+        <text class="s1cS" x="182" y="140">once a year, 2 h</text>
+        <text class="s1cL" x="530" y="268">reply to a complaint</text>
+        <text class="s1cS" x="530" y="284">daily, judgement</text>
+        <text class="s1cL" x="212" y="294">choose a supplier</text>
+        <text class="s1cS" x="212" y="310">rare, all judgement</text>
+
+        <text class="s1cN" x="30" y="400">Start in the hatched corner. The bottom-right corner is where AI drafting helps, and a person still sends.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the rust dot is the first build: frequent, identical every time, and cheap to check</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>The one-sentence test<span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Write the candidate as <strong>"When X happens, do Y with Z."</strong> When a web form is submitted, create a contact in the CRM with the name, email and source. When an invoice PDF lands in the inbox folder, rename it to date-client-amount and move it to the client's folder. If the sentence needs an "unless", a "depending on" or "if it looks like", the task has judgement in it, and that part either stays with a person or becomes an explicit rule before anything is built.</p>
+        <p>The X is the trigger, the Y is the action, and the Z is the data that has to travel between them. Session 2 is those three words, in detail.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>Where judgement goes instead<span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Tasks in the bottom-right corner, frequent but judgement-heavy, are where language models are most often put to work: drafting the reply, sorting the inbox, summarising the thread, with a person approving before anything is sent. That is a different discipline with its own failure modes, and it has its own course: <a href="https://phoebefu6.github.io/learn-ai-productivity-with-phoebe/">AI-Powered Productivity</a>. When the steps themselves are chosen by a model at run time, the result is an agent rather than a workflow; the <a href="https://phoebefu6.github.io/learn-ai-agents-with-phoebe/courses/a3-workflows-vs-agents.html">agents course</a> draws that line. Everything in these six sessions is a workflow: the steps are fixed when you build it.</p>
+      </div>
+    </details>
+
+    <div class="tryrow" data-fn="worth" data-title="Price one of your own tasks" data-hint="times a week, minutes saved, years it will run, build hours, upkeep minutes a month" data-seed="10 2 3 3 15" data-cta="Draw the line"></div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Price five of your own tasks</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">Five steps. The first two are on paper or in a notes app; the next two run a twelve-line Python script you can paste into any Python 3 (or skip, and use the calculator above, which does the same arithmetic). The last step writes the sentence session 2 will turn into a workflow. The printed outputs below are what the script prints on the example tasks; yours will differ, and should.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The build-along as a hand-drawn pipeline. A hatched pile of repeated tasks becomes five rows of numbers, then a column of net hours with break-even weeks, then one circled candidate, then a single sentence: when X happens, do Y with Z.">
+        <defs>
+          <filter id="s1dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="41" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s1dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s1dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s1dH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s1dL { font: 700 11.5px Inter, sans-serif; fill: #11233B; }
+          .s1dS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s1dB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s1dN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s1dSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="30" y="70" width="130" height="100" rx="8" transform="rotate(-1.5 95 120)" fill="url(#s1dHc)"/>
+          <rect x="210" y="70" width="140" height="100" rx="8" transform="rotate(0.8 280 120)" fill="#FFFFFF"/>
+          <rect x="400" y="70" width="140" height="100" rx="8" transform="rotate(-0.6 470 120)" fill="#EBF3FD"/>
+          <ellipse cx="635" cy="120" rx="58" ry="44" fill="#FDEEE4" stroke="#B5480C"/>
+          <rect x="720" y="70" width="140" height="100" rx="8" transform="rotate(0.7 790 120)" fill="#FFFFFF"/>
+          <path d="M164 120 L204 120" marker-end="url(#s1dAr)"/>
+          <path d="M354 120 L394 120" marker-end="url(#s1dAr)"/>
+          <path d="M544 120 L572 120" marker-end="url(#s1dAr)"/>
+          <path d="M696 120 L714 120" marker-end="url(#s1dAr)"/>
+        </g>
+
+        <text class="s1dH" x="30" y="48">STEPS 1-2</text>
+        <text class="s1dH" x="210" y="48">STEP 3</text>
+        <text class="s1dH" x="400" y="48">STEP 4</text>
+        <text class="s1dH" x="590" y="48">STEP 5</text>
+        <text class="s1dH" x="720" y="48">FOR SESSION 2</text>
+
+        <text class="s1dL" x="44" y="104">a week of</text>
+        <text class="s1dL" x="44" y="120">repeats</text>
+        <text class="s1dS" x="44" y="140">tally marks</text>
+        <text class="s1dL" x="224" y="104">five rows</text>
+        <text class="s1dS" x="224" y="122">how often, minutes</text>
+        <text class="s1dS" x="224" y="138">build, upkeep</text>
+        <text class="s1dL" x="414" y="104">net hours</text>
+        <text class="s1dS" x="414" y="122">break-even weeks</text>
+        <text class="s1dS" x="414" y="138">check one xkcd cell</text>
+        <text class="s1dB" x="635" y="116" text-anchor="middle">one</text>
+        <text class="s1dB" x="635" y="132" text-anchor="middle">candidate</text>
+        <text class="s1dL" x="734" y="104">When X happens,</text>
+        <text class="s1dL" x="734" y="120">do Y with Z.</text>
+        <text class="s1dS" x="734" y="140">no "unless"</text>
+
+        <text class="s1dN" x="30" y="214">Twenty-two minutes from a vague annoyance to one sentence with a number behind it.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the circle is the only output that matters; the rest is how you defend it</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>List what you repeat.</strong> Five tasks you did more than once last week, at work or at home. Do not filter yet. If you kept no tally, scroll your sent mail and your calendar for the last seven days: repetition shows up there.</p>
+        <div class="prompt-box good"><span class="label">★ Step 1 · the raw list</span>1. copy web-form leads into the CRM
+2. send the Monday status email
+3. rename and file invoice PDFs
+4. post the weekly sales number in the team chat
+5. tidy the yearly tax folder</div>
+      </div>
+      <div class="step">
+        <p><strong>Put four numbers on each.</strong> Times a week, minutes the automation would remove each time, hours you think it would take to build, minutes of upkeep a month. Guess the last two; you will refine them after session 3.</p>
+        <div class="prompt-box good"><span class="label">★ Step 2 · numbers, not feelings</span>task                          per week  minutes  build h  upkeep min/month
+leads into the CRM                  25        3        4        20
+Monday status email                  1       15        2        10
+invoice PDFs                        10        2        3        15
+weekly sales number                  1       10        3        30
+yearly tax folder                 1/52      120        6         0</div>
+      </div>
+      <div class="step">
+        <p><strong>Run the line for all five.</strong> Paste this into a file called <code>worth.py</code> with your own rows and run <code>python3 worth.py</code>. Three years is the default lifetime; change <code>YEARS</code> if the owner of the process gave you a shorter answer.</p>
+        <div class="prompt-box good"><span class="label">★ Step 3 · worth.py</span>TASKS = [  # name, times a week, minutes each, build hours, upkeep minutes a month
+    ("Copy web-form leads into the CRM", 25, 3, 4, 20),
+    ("Send the Monday status email", 1, 15, 2, 10),
+    ("Rename and file invoice PDFs", 10, 2, 3, 15),
+    ("Post the weekly sales number", 1, 10, 3, 30),
+    ("Tidy the yearly tax folder", 1 / 52, 120, 6, 0),
+]
+YEARS = 3
+
+for name, per_week, mins, build_h, upkeep_m in TASKS:
+    saved = per_week * mins * 52 * YEARS / 60
+    spent = build_h + upkeep_m * 12 * YEARS / 60
+    weekly = per_week * mins / 60 - upkeep_m * 12 / 52 / 60
+    be = "never" if weekly &lt;= 0 else f"{build_h / weekly:.0f} weeks"
+    print(f"{name:32s} saved {saved:6.1f} h  spent {spent:5.1f} h  net {saved - spent:+6.1f} h  break-even {be}")
+
+# Copy web-form leads into the CRM saved  195.0 h  spent  16.0 h  net +179.0 h  break-even 3 weeks
+# Send the Monday status email     saved   39.0 h  spent   8.0 h  net  +31.0 h  break-even 9 weeks
+# Rename and file invoice PDFs     saved   52.0 h  spent  12.0 h  net  +40.0 h  break-even 11 weeks
+# Post the weekly sales number     saved   26.0 h  spent  21.0 h  net   +5.0 h  break-even 59 weeks
+# Tidy the yearly tax folder       saved    6.0 h  spent   6.0 h  net   +0.0 h  break-even 156 weeks</div>
+      </div>
+      <div class="step">
+        <p><strong>Check your arithmetic against xkcd.</strong> Three cells of the comic, recomputed. If your function gives 6.3 for a daily five-minute task, it agrees with the chart's 6 days, and you now know those are 24-hour days.</p>
+        <div class="prompt-box good"><span class="label">★ Step 4 · xkcd.py</span>def budget_days(times_per_day, seconds_saved, years=5):
+    """How long you can spend, in 24-hour days, before the work costs more than it saves."""
+    return times_per_day * seconds_saved * 365 * years / 86400
+
+print(round(budget_days(1, 300), 1))       # 5 minutes, daily     -> chart says 6 days
+print(round(budget_days(1 / 7, 3600), 1))  # 1 hour, weekly       -> chart says 10 days
+print(round(budget_days(5, 30), 1))        # 30 seconds, 5 a day  -> chart says 3 days
+print(round(budget_days(1, 300) * 3, 1))   # the same 5 minutes in 8-hour working days
+# 6.3
+# 10.9
+# 3.2
+# 19.0</div>
+      </div>
+      <div class="step">
+        <p><strong>Circle one and write its sentence.</strong> Take the highest net hours whose sentence has no "unless". On the example list that is the CRM leads: 179 hours net, break-even in 3 weeks, and the same steps every time. The weekly sales number nets only 5 hours over three years and breaks even in week 59; it is a candidate only if consistency matters more than time, and you should say so.</p>
+        <div class="prompt-box good"><span class="label">★ Step 5 · the sentence</span>When a web form is submitted,
+create a contact in the CRM
+with name, email, company and the form's source field.
+
+Lifetime guess: 3 years (asked the sales lead).
+Wrong-run risk: a duplicate contact if the form is submitted twice.</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <p><strong>Write the wrong-run risk next to the sentence.</strong> "A duplicate contact if the form is submitted twice" is a one-line note today and the whole subject of session 5. Naming it before you build is the cheapest version of the fix.</p>
+    </div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 2</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li><strong>Keep a tally for five working days</strong> of the one task you circled. Replace your guessed "times a week" with the count and re-run step 3. Most guesses are high.</li>
+      <li><strong>Ask the owner how long the task will exist.</strong> One question, one answer, written next to the sentence. If nobody owns it, write that down too; session 6 is about why that matters.</li>
+      <li><strong>Find the trigger in the real tool.</strong> Open the app where X happens (the form tool, the inbox, the shared folder) and find out whether it can call a webhook, or only be checked on a schedule. Session 2 starts from that answer.</li>
+      <li><strong>Find one task that fails the line</strong> but that you would still automate, and write the non-time reason in one sentence.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and session 1 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="1">
+      <p class="qtext">1 · xkcd 1205 says a task done daily that you can shave 5 minutes off is worth up to 6 days of work. What are those 6 days?</p>
+      <button class="qopt" type="button">A · Six working days of 8 hours, so 48 hours</button>
+      <button class="qopt" type="button">B · Six 24-hour days, about 152 hours over five years, which is roughly 19 working days, and with no allowance for upkeep</button>
+      <button class="qopt" type="button">C · Six days per year of saving</button>
+      <button class="qopt" type="button">D · The time it takes to build the automation</button>
+      <p class="qwhy">5 minutes x 365 x 5 years = 9,125 minutes = 152 hours = 6.3 days of 24 hours. In 8-hour days it is 19. The chart is a five-year build budget and assumes the improvement costs nothing to keep.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">2 · Which cost does a time-saved chart leave out that is usually paid by someone other than the builder?</p>
+      <button class="qopt" type="button">A · The build hours</button>
+      <button class="qopt" type="button">B · The software subscription</button>
+      <button class="qopt" type="button">C · The wrong run: the automation that "worked" and texted a customer twice, or lost an order without telling anyone</button>
+      <button class="qopt" type="button">D · The time spent reading the chart</button>
+      <p class="qwhy">Upkeep and broken runs cost the builder hours. A wrong run costs a customer, a colleague or the books, and no timer catches it. Sessions 4 and 5 measure and then shrink exactly that line.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">3 · The weekly sales number nets 5 hours over three years and breaks even in week 59. A colleague says automate it anyway, because the manual number is sometimes wrong. Who is right?</p>
+      <button class="qopt" type="button">A · Possibly the colleague, but only if the reason is stated: the SRE book argues consistency is a return in its own right, while the break-even line is the honest floor on time; a decision that fails the floor should name the other return out loud</button>
+      <button class="qopt" type="button">B · Nobody: a task that fails the line must never be automated</button>
+      <button class="qopt" type="button">C · The colleague, because automation is always more accurate</button>
+      <button class="qopt" type="button">D · The line, because time is the only thing that can be measured</button>
+      <p class="qwhy">The two sources disagree on purpose. xkcd 1205 counts time only; Google's SRE chapter says automation "provides more than just time saving". Neither cancels the other. Decide on both, and write down which one carried the decision.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">xkcd 1205 "Is It Worth the Time?" (29 April 2013)</span><span class="note">Question, axes and five cells read from the comic's own transcript; every cell recomputed here, including the 24-hour-day reading</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">xkcd 1319 "Automation" (20 January 2014)</span><span class="note">Cited by number and title, described not reproduced</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Google SRE book, ch. 7, "The Evolution of Automation at Google"</span><span class="note">The four values and the three quoted sentences read at source; taught as the counter-argument to a time-only line</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Toil and how teams budget for removing it</span><span class="note">Linked to the reliability course's toil session, not taught here</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">The four extra costs and the task list</span><span class="note">Constructed for teaching; the receipts and the five tasks are examples and say so, the script outputs are real runs of the code shown</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Session 1 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>saved = how often x minutes x lifetime</b><span>Count the frequency, ask the owner for the lifetime, use the shorter of their answer and three years.</span></div>
+      <div class="cheat-item"><b>spent = build + upkeep x months</b><span>Plus first-week fixes and broken runs. Fifteen minutes a month is a floor for anything with two APIs.</span></div>
+      <div class="cheat-item"><b>xkcd days are 24-hour days</b><span>Daily, 5 minutes saved = 6 days = 152 hours = 19 working days, over five years, with no upkeep.</span></div>
+      <div class="cheat-item"><b>The wrong run has no timer</b><span>A double text or a silent loss is paid by someone else. Write the risk next to the task.</span></div>
+      <div class="cheat-item"><b>Time is the floor, not the whole</b><span>Consistency can justify a build that fails the line. Say which return carried the decision.</span></div>
+      <div class="cheat-item"><b>When X happens, do Y with Z</b><span>No "unless" in the sentence. X is the trigger, Y the action, Z the data between.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>You have one sentence: when X happens, do Y with Z. Session 2 takes it apart. Is X something the app tells you about the instant it happens, or something you have to keep checking for? What exactly travels from X to Y, and what happens to the fields nobody mapped? You will run n8n on your own machine, import a real five-node workflow, and watch one order become one item, then a customer record, then a text message.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Session 1 of 6 · learn-automation-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="../index.html">← Course home</a> &nbsp;·&nbsp; <a href="02-triggers-and-actions.html">Next: Triggers, actions and the data between →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

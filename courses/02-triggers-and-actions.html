@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Session 2 of 6. How a trigger finds out (instant webhook or polling with a seen-list), what travels between steps (items, bundles, mapped fields), where a step replaces the data instead of adding to it, and the one expression that reaches back for it. Run n8n locally and trace one real order through five nodes.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Triggers, actions and the data between - learn automation with phoebe">
+<meta property="og:description" content="Session 2 of 6. Instant vs polling, items vs bundles vs fields, and the HTTP step that quietly replaces your data.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-automation-with-phoebe/courses/02-triggers-and-actions.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Triggers, actions and the data between - learn automation with phoebe">
+<meta name="twitter:description" content="Session 2 of 6. What travels between two steps, and what gets dropped on the way.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Session 2 · Triggers, actions and the data between - learn automation with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-automation-with-phoebe</a> / Session 2 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn Automation with Phoebe · Session 2 of 6</div>
+    <h1>Triggers, actions and <span class="accent">the data between</span></h1>
+    <p class="sub">Last session ended with one sentence: when X happens, do Y with Z. Tonight each of those letters gets a mechanism. X is a trigger, and it either gets told the instant something happens or has to keep asking. Z is the data, and it travels between steps as items, bundles or mapped fields, losing pieces at every step that reshapes it. Y is the action, and it can only use what survived the trip. You will run n8n on your own machine, import a real five-node workflow, and follow one order from webhook to text message, watching exactly where its event id disappears.</p>
+    <div class="chip-row">
+      <span class="chip level">🟡 Core</span>
+      <span class="chip audience">Anyone with one candidate task</span>
+      <span class="chip audience">Node 24 for the n8n path</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:4">3-18 · How triggers find out, what travels, reaching back</span>
+      <span class="a3" style="flex:5">18-40 · Build-along: one order, two ways</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where we start</h2>
+    </div>
+    <p class="lede">Every no-code tool draws a workflow as boxes joined by lines, and the lines look like nothing. They are where most of the surprises live. A trigger that polls can miss nothing and still fire twice after you pause it. A step that fetches a customer record can hand the next step the customer and throw away the order. None of this shows on the canvas; all of it shows in the output panel of each step, which is the one screen worth learning to read tonight.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">★ Build-along = run it yourself</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> The trigger type of your own candidate task, named and checked; n8n running locally with a real five-node workflow imported; the item written out at every step of one order, including the step where the event id is lost; and the one reach-back expression that gets it back.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers instant and polling triggers</span>
+      <h2>How a trigger finds out</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">There are only two ways for a workflow to learn that something happened. Either the app calls you, sending one HTTP request to a webhook URL the moment the event occurs, or you call the app, asking on a timer whether anything is new. The first is instant and trusts the sender. The second is late by up to one interval and has to remember what it has already seen. Both can hand you the same event twice, for different reasons.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 372" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn mechanisms side by side. Left, instant: the app sends one POST to your tool's webhook URL the moment the event happens; a second dashed rust arrow shows the same event arriving again, because Zapier says instant triggers do not deduplicate while Stripe says an endpoint might receive the same event more than once. Right, polling: your tool asks the app on a timer, gets items back each with an id, and compares them with a stacked seen-list; a new id runs once, a seen id is skipped; when the Zap is turned off the list is cleared, and when it is turned on one poll fills it again.">
+        <defs>
+          <filter id="s2aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="52" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s2aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s2aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s2aH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s2aL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s2aS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s2aB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s2aA { font: 700 11px Inter, sans-serif; fill: #0A64C4; }
+          .s2aN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s2aSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- panels -->
+          <rect x="24" y="40" width="404" height="290" rx="12" transform="rotate(-0.4 226 185)" fill="#FFFFFF" stroke="#C7D4E5"/>
+          <rect x="452" y="40" width="404" height="290" rx="12" transform="rotate(0.4 654 185)" fill="#FFFFFF" stroke="#C7D4E5"/>
+          <!-- instant: app and webhook URL -->
+          <rect x="44" y="80" width="110" height="60" rx="8" transform="rotate(-1.5 99 110)" fill="#EBF3FD"/>
+          <rect x="290" y="80" width="120" height="60" rx="8" transform="rotate(1.2 350 110)" fill="#FFFFFF"/>
+          <path d="M158 100 L284 100" marker-end="url(#s2aAr)"/>
+          <path d="M158 122 L284 122" stroke="#B5480C" stroke-dasharray="7 6" marker-end="url(#s2aAr)"/>
+          <!-- instant: the disagreement -->
+          <rect x="44" y="234" width="366" height="56" rx="8" transform="rotate(0.5 227 262)" fill="#FDEEE4" stroke="#B5480C"/>
+          <!-- polling: poller and app -->
+          <rect x="470" y="80" width="112" height="60" rx="8" transform="rotate(1.4 526 110)" fill="#FFFFFF"/>
+          <rect x="768" y="80" width="80" height="60" rx="8" transform="rotate(-1.6 808 110)" fill="#EBF3FD"/>
+          <path d="M586 100 L762 100" marker-end="url(#s2aAr)"/>
+          <path d="M764 122 L588 122" marker-end="url(#s2aAr)"/>
+          <!-- clock doodle on the poller -->
+          <circle cx="562" cy="96" r="9"/>
+          <path d="M562 90 L562 96 L567 99"/>
+          <!-- polling: compare arrow and the seen-list stack -->
+          <path d="M520 144 L520 168" marker-end="url(#s2aAr)"/>
+          <rect x="470" y="174" width="110" height="22" rx="4" transform="rotate(-1 525 185)" fill="url(#s2aHc)"/>
+          <rect x="470" y="200" width="110" height="22" rx="4" transform="rotate(0.8 525 211)" fill="url(#s2aHc)"/>
+          <rect x="470" y="226" width="110" height="22" rx="4" transform="rotate(-0.6 525 237)" fill="url(#s2aHc)"/>
+          <!-- the moment the list is cleared -->
+          <rect x="600" y="240" width="240" height="70" rx="8" transform="rotate(-0.6 720 275)" fill="#FDEEE4" stroke="#B5480C"/>
+        </g>
+
+        <text class="s2aH" x="30" y="26">TWO WAYS A TRIGGER FINDS OUT</text>
+        <text class="s2aS" x="250" y="26">ids on the right are illustrative; the behaviours are from each vendor's docs</text>
+
+        <text class="s2aH" x="44" y="64">INSTANT · the app calls you</text>
+        <text class="s2aL" x="99" y="106" text-anchor="middle">the app</text>
+        <text class="s2aS" x="99" y="122" text-anchor="middle">event happens</text>
+        <text class="s2aL" x="350" y="106" text-anchor="middle">webhook URL</text>
+        <text class="s2aS" x="350" y="122" text-anchor="middle">your tool listens</text>
+        <text class="s2aS" x="164" y="92">one POST, at once</text>
+        <text class="s2aB" x="164" y="140">same event, again</text>
+
+        <text class="s2aH" x="44" y="176">WHO REMOVES THE REPEAT?</text>
+        <text class="s2aS" x="44" y="196">Zapier: instant triggers do not use deduplication,</text>
+        <text class="s2aS" x="44" y="212">because apps only send new data</text>
+        <text class="s2aB" x="58" y="258">Stripe: a webhook endpoint might occasionally</text>
+        <text class="s2aB" x="58" y="274">receive the same event more than once</text>
+        <text class="s2aA" x="44" y="316">session 5 builds the guard</text>
+
+        <text class="s2aH" x="472" y="64">POLLING · you ask the app</text>
+        <text class="s2aL" x="518" y="106" text-anchor="middle">poller</text>
+        <text class="s2aS" x="518" y="122" text-anchor="middle">a timer</text>
+        <text class="s2aL" x="808" y="106" text-anchor="middle">the app</text>
+        <text class="s2aS" x="808" y="122" text-anchor="middle">a list</text>
+        <text class="s2aS" x="606" y="92">asks: anything new?</text>
+        <text class="s2aS" x="606" y="140">items, each with an id</text>
+        <text class="s2aA" x="530" y="160">compare ids</text>
+        <text class="s2aL" x="525" y="189" text-anchor="middle">id 4411</text>
+        <text class="s2aL" x="525" y="215" text-anchor="middle">id 4412</text>
+        <text class="s2aL" x="525" y="241" text-anchor="middle">id 4413</text>
+        <text class="s2aS" x="476" y="270">the seen-list</text>
+        <text class="s2aL" x="600" y="190">id 4414: not in the list, runs</text>
+        <text class="s2aS" x="600" y="208">id 4412 again: seen, skipped</text>
+        <text class="s2aB" x="614" y="264">Zap turned off: list cleared</text>
+        <text class="s2aS" x="614" y="282">turned on: one poll fills it again</text>
+        <text class="s2aS" x="614" y="298">Zapier keys it on the id field</text>
+
+        <text class="s2aN" x="30" y="356">Polling remembers, so it can forget. Instant trusts the sender, so it repeats whatever the sender repeats.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the two rust boxes are the two ways one event becomes two runs: a sender that resends, and a memory that was wiped</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span>Instant or polling, and how to tell<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>Instant (a webhook).</strong> You give the app a URL. When the event happens, the app sends one HTTP POST to it with the event in the body. Nothing runs on a timer and nothing is compared: whatever arrives is the event. Zapier marks these triggers "Instant" in its picker; in n8n it is the Webhook node, which gives you a test URL and a production URL; in Make it is a webhook module.</p>
+        <p><strong>Polling.</strong> Your tool asks the app on a schedule, "what is in the list now?", and works out what is new by comparing ids. Zapier's platform docs say that by default "the field with the key <code>id</code> is used as the primary key" for this. Late by up to one interval, and every check costs something somewhere: Make's help defines an operation as "a single module run to process data or check for new data", so a trigger check counts once even when there is nothing new. Make now bills in credits (since 27 August; 1 operation equals 1 credit for non-AI apps), so read "operation" there as "credit".</p>
+        <p><strong>How to tell for your own app.</strong> Look for the words "webhook", "instant" or "notification URL" in the app's settings or in the trigger picker. If all you can find is "new row", "new file" or "new email" with a check interval, it is polling. Homework 1 is exactly this.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>The seen-list resets when you switch it off<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Zapier's <a href="https://docs.zapier.com/integrations/build/deduplication">deduplication docs</a> describe the memory behind a polling trigger: when a Zap is turned on, it stores the ids it can currently see, so old items are not treated as new; on every later poll, any id not in that list is a new item and runs the Zap once. When the Zap is turned off, the list is cleared. Turn it back on and one poll fills the list again from whatever is there at that moment.</p>
+        <p>Two consequences follow, both practical. Items that arrive while the Zap is off are in the list the first poll stores, so they are treated as already seen rather than as new; if you need them processed, that is a manual replay, not a toggle. And the dedupe is only as good as the <code>id</code> field: if an app gives an edited record a fresh id, or two records the same one, the seen-list will run the edit as new or skip the second record. The rest of the platform behaves accordingly: Zapier's help article "How Zapier handles duplicate data in Zaps" (updated 29 May 2026) states plainly that "Instant triggers do not use deduplication because apps only send new data." That sentence is the claim Part 1's figure puts next to Stripe's.</p>
+        <p>The general lesson is wider than Zapier. Any memory a tool keeps on your behalf, a seen-list, a cursor, an idempotency key store, is state you did not write down, and pausing or rebuilding the workflow can reset it. Session 6 comes back to this as a maintenance item.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>Two documents that disagree, both read at source.</strong> Zapier's help says instant triggers skip deduplication "because apps only send new data". Stripe's webhook docs say "Webhook endpoints might occasionally receive the same event more than once", retry failed deliveries for up to three days in live mode, and advise tracking the event ids you have processed. Both are honest about their own side: Zapier does not dedupe, and Stripe does resend. Put them together and an instant trigger from a sender like Stripe can run your workflow twice for one payment. Nothing in either tool removes the repeat for you; session 5 builds the guard, and homework 4 lets you watch your own tool do it.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers items, bundles, fields</span>
+      <h2>What travels between steps</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">Between any two boxes on the canvas there is a small parcel of data. n8n calls it an item, Make calls it a bundle, Zapier shows it as the output fields of a step that you map into the next one. The parcel is rebuilt at every step that shapes or fetches something, and a step that fetches usually hands on only what it fetched. Below is one real order, evt_0002, as it actually looks after each of the five nodes in rung-1.json.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 352" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="One order, evt_0002, drawn after each of five n8n nodes, from the real trace output. Order webhook: the payload wrapped in body with headers, params and query, holding event_id, ts 25328, type order, customer_id c_071, amount 147. Is it an order: the same item, unchanged. Shape the message: three fields only, event_id, customer_id and amount; ts and type are dropped. Look up customer, in rust: the item is replaced by the CRM answer, customer_id, phone and name; event_id and amount are gone. Send the SMS: status sent, message_id msg_1.">
+        <defs>
+          <filter id="s2bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="64" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s2bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s2bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s2bH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s2bL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s2bS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s2bB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s2bA { font: 700 11px Inter, sans-serif; fill: #0A64C4; }
+          .s2bW { font: 800 12px Inter, sans-serif; fill: #FFFFFF; }
+          .s2bN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s2bSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- node headers -->
+          <rect x="24" y="46" width="148" height="36" rx="8" transform="rotate(-1 98 64)" fill="#EBF3FD"/>
+          <rect x="196" y="46" width="148" height="36" rx="8" transform="rotate(0.8 270 64)" fill="#EBF3FD"/>
+          <rect x="368" y="46" width="148" height="36" rx="8" transform="rotate(-0.7 442 64)" fill="#EBF3FD"/>
+          <rect x="540" y="46" width="148" height="36" rx="8" transform="rotate(1 614 64)" fill="#B5480C" stroke="#B5480C"/>
+          <rect x="712" y="46" width="148" height="36" rx="8" transform="rotate(-0.9 786 64)" fill="#EBF3FD"/>
+          <path d="M175 64 L192 64" marker-end="url(#s2bAr)"/>
+          <path d="M347 64 L364 64" marker-end="url(#s2bAr)"/>
+          <path d="M519 64 L536 64" marker-end="url(#s2bAr)"/>
+          <path d="M691 64 L708 64" marker-end="url(#s2bAr)"/>
+          <!-- item cards -->
+          <rect x="24" y="100" width="148" height="160" rx="8" transform="rotate(0.6 98 180)" fill="#FFFFFF"/>
+          <rect x="196" y="100" width="148" height="160" rx="8" transform="rotate(-0.5 270 180)" fill="#FFFFFF"/>
+          <rect x="368" y="100" width="148" height="160" rx="8" transform="rotate(0.5 442 180)" fill="#FFFFFF"/>
+          <rect x="540" y="100" width="148" height="160" rx="8" transform="rotate(-0.6 614 180)" fill="#FDEEE4" stroke="#B5480C"/>
+          <rect x="712" y="100" width="148" height="160" rx="8" transform="rotate(0.7 786 180)" fill="#FFFFFF"/>
+          <!-- phone doodle on the last card -->
+          <rect x="826" y="214" width="20" height="34" rx="4"/>
+          <path d="M832 242 L840 242"/>
+        </g>
+
+        <text class="s2bH" x="24" y="30">ONE ORDER, FIVE HOPS</text>
+        <text class="s2bS" x="190" y="30">the item after each node, from node materials/trace_one.js evt_0002 1</text>
+
+        <text class="s2bL" x="98" y="68" text-anchor="middle">Order webhook</text>
+        <text class="s2bL" x="270" y="68" text-anchor="middle">Is it an order?</text>
+        <text class="s2bL" x="442" y="68" text-anchor="middle">Shape the message</text>
+        <text class="s2bW" x="614" y="68" text-anchor="middle">Look up customer</text>
+        <text class="s2bL" x="786" y="68" text-anchor="middle">Send the SMS</text>
+
+        <text class="s2bA" x="36" y="122">headers, params,</text>
+        <text class="s2bA" x="36" y="138">query, body:</text>
+        <text class="s2bS" x="44" y="156">event_id evt_0002</text>
+        <text class="s2bS" x="44" y="172">ts 25328</text>
+        <text class="s2bS" x="44" y="188">type order</text>
+        <text class="s2bS" x="44" y="204">customer_id c_071</text>
+        <text class="s2bS" x="44" y="220">amount 147</text>
+        <text class="s2bS" x="36" y="246">wrapped in body</text>
+
+        <text class="s2bL" x="208" y="124">same item,</text>
+        <text class="s2bL" x="208" y="140">unchanged</text>
+        <text class="s2bS" x="208" y="164">checks body.type</text>
+        <text class="s2bS" x="208" y="180">equals order</text>
+        <text class="s2bS" x="208" y="210">a signup stops here,</text>
+        <text class="s2bS" x="208" y="226">on the false branch</text>
+
+        <text class="s2bS" x="380" y="124">event_id evt_0002</text>
+        <text class="s2bS" x="380" y="140">customer_id c_071</text>
+        <text class="s2bS" x="380" y="156">amount 147</text>
+        <text class="s2bA" x="380" y="190">new item, 3 fields</text>
+        <text class="s2bS" x="380" y="214">dropped: ts, type,</text>
+        <text class="s2bS" x="380" y="230">and the body wrapper</text>
+
+        <text class="s2bS" x="552" y="124">customer_id c_071</text>
+        <text class="s2bS" x="552" y="140">phone +1555010071</text>
+        <text class="s2bS" x="552" y="156">name Customer 071</text>
+        <text class="s2bB" x="552" y="190">REPLACED, no merge</text>
+        <text class="s2bB" x="552" y="214">event_id: gone</text>
+        <text class="s2bB" x="552" y="230">amount: gone</text>
+
+        <text class="s2bS" x="724" y="124">status sent</text>
+        <text class="s2bS" x="724" y="140">message_id msg_1</text>
+        <text class="s2bS" x="724" y="174">needs event_id</text>
+        <text class="s2bS" x="724" y="190">and amount for</text>
+        <text class="s2bS" x="724" y="206">the text: reaches</text>
+        <text class="s2bS" x="724" y="222">back (Part 3)</text>
+
+        <text class="s2bN" x="24" y="296">Each card is the real output after that node. The rust card is where the order stops being an order.</text>
+        <text class="s2bN" x="24" y="318">The HTTP lookup hands on only what the CRM answered: the customer, not the event that asked about them.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - read left to right: wrapped, checked, trimmed to three, then replaced outright by someone else's answer</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>What travels, and what gets dropped<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>The webhook wraps.</strong> n8n's Webhook node puts the request's payload under <code>body</code>, next to <code>headers</code>, <code>params</code> and <code>query</code>. So the order's type is <code>$json.body.type</code>, not <code>$json.type</code>. The first expression most people write here returns nothing.</p>
+        <p><strong>The Set node trims.</strong> "Shape the message" is a Set node with <code>includeOtherFields</code> off: it builds a new item with exactly three fields, <code>event_id</code>, <code>customer_id</code> and <code>amount</code>, and everything else, <code>ts</code>, <code>type</code> and the whole <code>body</code> wrapper, is not passed on. That is deliberate here: the next step needs a clean parcel. It also means any later step that wants the timestamp cannot have it.</p>
+        <p><strong>The lookup replaces.</strong> "Look up customer" is an HTTP Request. Its output item is the CRM's answer, <code>customer_id</code>, <code>phone</code> and <code>name</code>, and nothing else. It does not merge the answer into the item it received. After it, <code>event_id</code> and <code>amount</code> are simply not in the item, and the send step needs both. A step that fetches is a step that replaces: treat every HTTP call that way until its output panel shows otherwise.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>Items, bundles and mapped fields across the three tools<span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>n8n.</strong> The <a href="https://docs.n8n.io/">n8n docs</a> page on its data structure says "all data passed between nodes is an array of objects", each item wrapped in a <code>json</code> key. An array, because one node run can carry many items: a trigger that returns ten new rows hands ten items to the next node, and that node runs once per item. <code>$json</code> in an expression is the <code>json</code> of the item currently being processed.</p>
+        <p><strong>Make.</strong> The same parcel is a bundle. A module receives bundles and outputs bundles; a search module that finds five records outputs five bundles, and every later module runs once per bundle, each run counting as an operation, now a credit. The bundle inspector after a run (the bubble over each module) is Make's version of n8n's output panel.</p>
+        <p><strong>Zapier.</strong> You rarely see the parcel as one object. Each step publishes output fields, and in the next step you map them into inputs by picking "Step 1: Customer Email" from a list. The mechanism is the same, the presentation differs: a field you never mapped is not carried forward for you, and a field that a step did not output cannot be picked later.</p>
+        <table class="clean">
+          <tr><th>Tool</th><th>The parcel</th><th>Where to read it after a run</th></tr>
+          <tr><td>n8n</td><td>an array of items, each <code>{json: {...}}</code></td><td>the node's output panel (Table, JSON, Schema)</td></tr>
+          <tr><td>Make</td><td>bundles, one module run per bundle</td><td>the bubble over each module in the run history</td></tr>
+          <tr><td>Zapier</td><td>output fields per step, mapped by name</td><td>"Data out" for each step in the Zap run history</td></tr>
+        </table>
+        <p>The habit that transfers: before wiring step N, open step N-1's output and check that every field step N needs is actually there.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>The missing timestamp (a common pattern, constructed example).</strong> A shop adds a "received at" line to its confirmation text a month after launch. The builder maps <code>ts</code> in the send step and gets an empty value, because the Set node two steps earlier never kept it. The fix takes thirty seconds once you look at the Set node's output; finding it takes an afternoon if you only look at the send step. The lesson is the reading order: walk the output panels from the trigger forward, not from the broken step backward.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers expressions and reaching back</span>
+      <h2>Reaching past a step that replaced the item</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">The send step needs the customer's phone, which is in the item in front of it, and the event id, which is not. The way out is to stop reading the current item and read an earlier node's item instead, by name. That is the whole of the expression language this workflow needs: one form for "here" and one for "back there".</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 302" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three hand-drawn n8n nodes in a row: Shape the message, holding event_id evt_0002; Look up customer, in rust, which replaced the item; and Send the SMS. A curved reach-back arrow goes from Send the SMS over the lookup back to Shape the message, labelled with the expression dollar sign, open bracket, quote Shape the message quote, close bracket, dot item dot json dot event_id. Under the send node: dollar json dot event_id is empty here, dollar json dot phone comes from the lookup. Under the Set node: renaming this node breaks every expression that names it.">
+        <defs>
+          <filter id="s2cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="77" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s2cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s2cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s2cH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s2cL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s2cS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s2cB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s2cA { font: 700 12px Inter, sans-serif; fill: #0A64C4; }
+          .s2cN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s2cSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="60" y="150" width="200" height="66" rx="10" transform="rotate(-1 160 183)" fill="url(#s2cHc)"/>
+          <rect x="340" y="150" width="200" height="66" rx="10" transform="rotate(0.8 440 183)" fill="#FDEEE4" stroke="#B5480C"/>
+          <rect x="620" y="150" width="200" height="66" rx="10" transform="rotate(-0.7 720 183)" fill="#FFFFFF"/>
+          <path d="M264 183 L334 183" marker-end="url(#s2cAr)"/>
+          <path d="M544 183 L614 183" marker-end="url(#s2cAr)"/>
+          <!-- the reach-back -->
+          <path d="M720 144 Q440 44 164 144" stroke="#0A64C4" stroke-width="2.6" marker-end="url(#s2cAr)"/>
+        </g>
+
+        <text class="s2cH" x="30" y="26">ONE EXPRESSION REACHES BACK</text>
+        <text class="s2cS" x="250" y="26">the send body in rung-1.json reads two places: the item here, and a named node earlier</text>
+
+        <text class="s2cA" x="440" y="62" text-anchor="middle">$('Shape the message').item.json.event_id</text>
+        <text class="s2cS" x="440" y="80" text-anchor="middle">reads the item of a named earlier node</text>
+
+        <text class="s2cL" x="160" y="178" text-anchor="middle">Shape the message</text>
+        <text class="s2cS" x="160" y="198" text-anchor="middle">event_id evt_0002</text>
+        <text class="s2cL" x="440" y="178" text-anchor="middle">Look up customer</text>
+        <text class="s2cB" x="440" y="198" text-anchor="middle">item replaced</text>
+        <text class="s2cL" x="720" y="178" text-anchor="middle">Send the SMS</text>
+        <text class="s2cS" x="720" y="198" text-anchor="middle">needs phone and event_id</text>
+
+        <text class="s2cS" x="60" y="244">renaming this node breaks</text>
+        <text class="s2cS" x="60" y="260">every expression that names it</text>
+        <text class="s2cB" x="620" y="244">$json.event_id: empty here</text>
+        <text class="s2cS" x="620" y="260">$json.phone: from the lookup</text>
+
+        <text class="s2cN" x="30" y="288">$json means the item in front of you. A node name in $('...') means a specific item behind you.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the arc jumps the rust node: that is the only way the send step sees the event id again</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>Two expressions are enough for this workflow<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>n8n expressions sit inside <code>{{ }}</code>, and a parameter that holds one starts with <code>=</code>. Every expression in rung-1.json is one of two forms.</p>
+        <p><strong>Here: <code>$json.field</code>.</strong> The item the node is processing right now.</p>
+        <ul>
+          <li>IF "Is it an order?": <code>={{ $json.body.type }}</code> equals <code>order</code></li>
+          <li>Set "Shape the message": <code>event_id</code> = <code>={{ $json.body.event_id }}</code>, <code>customer_id</code> = <code>={{ $json.body.customer_id }}</code>, <code>amount</code> = <code>={{ $json.body.amount }}</code> (number)</li>
+          <li>Lookup URL: <code>=http://127.0.0.1:8787/crm/customers/{{ $json.customer_id }}?event_id={{ $json.event_id }}</code></li>
+          <li>Send body: <code>to</code> = <code>={{ $json.phone }}</code></li>
+        </ul>
+        <p><strong>Back there: <code>$('Node name').item.json.field</code>.</strong> The matching item of an earlier node, by its name.</p>
+        <ul>
+          <li>Send body: <code>event_id</code> = <code>={{ $('Shape the message').item.json.event_id }}</code></li>
+          <li>Send body: <code>text</code> = <code>=Order {{ $('Shape the message').item.json.event_id }} confirmed, {{ $('Shape the message').item.json.amount }} paid. Thank you.</code></li>
+        </ul>
+        <p>Notice the Set node reads <code>$json.body.*</code> (it is right after the webhook) and the lookup reads <code>$json.customer_id</code> (it is right after the Set). The same field has a different path depending on which node you are standing in. That is the item changing shape, made visible.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>When a reach-back breaks: renamed nodes<span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A reach-back names a node in a string: <code>$('Shape the message')</code>. Rename that node to "Build SMS" and every expression that still says <code>'Shape the message'</code> points at a node that no longer exists. Depending on the version and where the expression sits, the editor may update references for you or the run fails at the send step with an error about the referenced node. Do not rely on either; treat a node rename as a change to every node downstream of it.</p>
+        <p>Three practice habits make this cheap, none of them measured, all of them common sense. Name nodes for what they produce ("Shape the message", "Look up customer") on day one, so there is no reason to rename later. Before renaming, search the workflow JSON for the old name in quotes; every hit is an expression to check. After renaming, run one test event and read the output panel of every node after it, not only the last one.</p>
+        <p>Make and Zapier map fields by a step's position or id rather than by a free-text name, so this exact failure is mostly n8n's; their version is deleting or reordering a step that later steps mapped from.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>GitHub gives you 10 seconds.</strong> GitHub's "Best practices for using webhooks" asks receivers to respond with a 2XX within 10 seconds, and lets you redeliver a missed delivery, which keeps the same <code>X-GitHub-Delivery</code> header. Two things follow for this workflow. The "Order webhook" node in rung-1.json is set to respond as soon as it receives the request, not after the lookup and the send finish, so a slow CRM never makes the sender think the delivery failed. And a redelivery is, by design, the same event a second time: the delivery id it carries is exactly the kind of key session 5 uses to make the repeat harmless.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>One order, two ways</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">No paid account, no cloud signup. You will run the same five-node workflow two ways: inside real n8n on your own machine, and through a small Node script that follows one order and prints the item after every node. Both talk to the same local mock CRM and SMS endpoints, so nothing leaves your laptop and no real text is sent. Every output below is a real capture from 5 October 2026; if n8n will not start on your machine, steps 4 and 5 still work with Node and Python alone.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 292" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn paths to the same endpoints. Top left: n8n on your machine, started with npx n8n, editor on port 5678, rung-1.json imported. Bottom left: node trace_one.js, no n8n needed, prints each node's item. Both arrows point at one rust box on the right: mock_server.py on 127.0.0.1 port 8787, serving GET /crm/customers/c_071, POST /sms/send and GET /log.">
+        <defs>
+          <filter id="s2dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="88" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s2dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s2dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s2dH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s2dL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s2dS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s2dB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s2dA { font: 700 11px Inter, sans-serif; fill: #0A64C4; }
+          .s2dN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s2dSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="40" y="56" width="230" height="72" rx="10" transform="rotate(-1.2 155 92)" fill="#EBF3FD"/>
+          <rect x="40" y="170" width="230" height="72" rx="10" transform="rotate(1 155 206)" fill="#FFFFFF"/>
+          <rect x="560" y="70" width="290" height="150" rx="10" transform="rotate(0.6 705 145)" fill="#FDEEE4" stroke="#B5480C"/>
+          <path d="M274 96 L554 122" marker-end="url(#s2dAr)"/>
+          <path d="M274 204 L554 178" marker-end="url(#s2dAr)"/>
+          <!-- terminal doodle -->
+          <rect x="228" y="186" width="30" height="22" rx="3"/>
+          <path d="M234 193 L239 197 L234 201"/>
+          <path d="M242 202 L250 202"/>
+        </g>
+
+        <text class="s2dH" x="40" y="36">TWO WAYS TO RUN THE SAME FIVE NODES</text>
+
+        <text class="s2dL" x="56" y="84">n8n on your machine</text>
+        <text class="s2dS" x="56" y="102">npx n8n, editor on :5678</text>
+        <text class="s2dS" x="56" y="118">rung-1.json imported</text>
+        <text class="s2dL" x="56" y="198">node trace_one.js</text>
+        <text class="s2dS" x="56" y="216">no n8n needed</text>
+        <text class="s2dS" x="56" y="232">prints each node's item</text>
+
+        <text class="s2dA" x="300" y="86">steps 1 to 3, and 6</text>
+        <text class="s2dA" x="300" y="226">step 5</text>
+
+        <text class="s2dH" x="580" y="98">mock_server.py</text>
+        <text class="s2dB" x="580" y="116">127.0.0.1:8787, step 4</text>
+        <text class="s2dL" x="580" y="146">GET /crm/customers/c_071</text>
+        <text class="s2dL" x="580" y="166">POST /sms/send</text>
+        <text class="s2dL" x="580" y="186">GET /log</text>
+        <text class="s2dS" x="580" y="206">nothing leaves your laptop</text>
+
+        <text class="s2dN" x="40" y="276">Same endpoints, same item shapes. If n8n will not start, the bottom path still teaches the whole lesson.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the rust box is shared on purpose: whichever path you take, the CRM and the SMS gateway answer the same way</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Install Node 24 and check it.</strong> n8n's own install docs say "n8n requires a Node.js version between 20.19 and 24.x, inclusive". The current stable npm package, n8n@2.41.6, declares <code>engines: node &gt;=24.0.0</code>. Both facts were read on 5 October 2026, and they disagree: on Node 22 the current stable does not satisfy its own requirement. Install Node 24 (or use Docker) and check.</p>
+        <div class="prompt-box good"><span class="label">★ Step 1 · Node version</span>$ node --version
+v24.21.0</div>
+      </div>
+      <div class="step">
+        <p><strong>Start n8n and ask if it is alive.</strong> The first <code>npx n8n</code> downloads n8n, which takes a while; the editor then opens on <code>http://localhost:5678</code>. In a second terminal, the health check answers in a few seconds. If port 5678 is taken, set <code>N8N_PORT</code> to another port and use that in the URL. The startup log also prints a warning worth knowing: "Running n8n outside a container is deprecated."</p>
+        <div class="prompt-box good"><span class="label">★ Step 2 · npx n8n and healthz</span>$ npx n8n            # first run downloads n8n; the editor is then at http://localhost:5678
+$ curl -s http://localhost:5678/healthz
+{"status":"ok"}</div>
+      </div>
+      <div class="step">
+        <p><strong>Import the workflow.</strong> Download <a href="../assets/workflows/rung-1.json">rung-1.json</a>. In the editor, open a new workflow and import or paste the file; the five nodes appear on the canvas. Or use the command line (prefix with <code>npx</code> if n8n is not installed globally).</p>
+        <div class="prompt-box good"><span class="label">★ Step 3 · import rung-1.json</span>$ n8n import:workflow --input=rung-1.json
+Importing 1 workflows...
+Successfully imported 1 workflow.</div>
+      </div>
+      <div class="step">
+        <p><strong>Start the mock endpoints and call the CRM by hand.</strong> From the repo folder, run <a href="../materials/mock_server.py">mock_server.py</a> (Python 3, no packages). It plays the CRM and the SMS gateway on 127.0.0.1:8787. Call the lookup yourself: this answer is exactly the item that replaces the order in Part 2. Then post the same SMS twice and read the log. The mock has an idempotency store switched on, so the second post is suppressed; that guard is session 5's subject, and here it is only a preview of the shape.</p>
+        <div class="prompt-box good"><span class="label">★ Step 4 · mock_server.py and curl</span>$ python3 materials/mock_server.py
+mock endpoints on http://127.0.0.1:8787  (idempotency store ON)
+
+$ curl -s "http://127.0.0.1:8787/crm/customers/c_071?event_id=evt_0002"
+{"customer_id": "c_071", "phone": "+1555010071", "name": "Customer 071"}
+
+$ curl -s -X POST http://127.0.0.1:8787/sms/send -H 'Content-Type: application/json' \
+    -H 'Idempotency-Key: evt_0002' -d '{"event_id":"evt_0002","to":"+1555010071","text":"Order evt_0002 confirmed"}'
+{"status": "sent", "message_id": "msg_1"}
+$ (the same command again)
+{"status": "duplicate-suppressed", "message_id": "msg_1"}
+$ curl -s http://127.0.0.1:8787/log
+{"deliveries": [{"event_id": "evt_0002", "message_id": "msg_1", "phase": "main"}], "deadLetter": []}</div>
+      </div>
+      <div class="step">
+        <p><strong>Follow one order through all five nodes.</strong> <a href="../materials/trace_one.js">trace_one.js</a> runs the rung-1 logic for one event and prints the item after each node. It needs only Node, so it works even if n8n will not start. The <code>1</code> is the rung. Read the five lines against Part 2's figure: wrapped in <code>body</code>, unchanged, trimmed to three fields, replaced by the CRM's answer, then the send result. "http tries: 2" is the lookup plus the send. Then run <code>evt_0001</code>, a signup, and watch the IF stop it.</p>
+        <div class="prompt-box good"><span class="label">★ Step 5 · node materials/trace_one.js</span>$ node materials/trace_one.js evt_0002 1
+event: {"event_id":"evt_0002","ts":25328,"type":"order","customer_id":"c_071","amount":147}
+path:  Order webhook &gt; Is it an order? &gt; Shape the message &gt; Look up customer &gt; Send the SMS
+  Order webhook      {"headers":{},"params":{},"query":{},"body":{"event_id":"evt_0002","ts":25328,"type":"order","customer_id":"c_071","amount":147}}
+  Is it an order?    {"headers":{},"params":{},"query":{},"body":{"event_id":"evt_0002","ts":25328,"type":"order","customer_id":"c_071","amount":147}}
+  Shape the message  {"event_id":"evt_0002","customer_id":"c_071","amount":147}
+  Look up customer   {"customer_id":"c_071","phone":"+1555010071","name":"Customer 071"}
+  Send the SMS       {"status":"sent","message_id":"msg_1"}
+status: success | texts sent: 1 | http tries: 2
+
+$ node materials/trace_one.js evt_0001 1
+event: {"event_id":"evt_0001","ts":25289,"type":"signup","customer_id":"c_187","amount":0}
+path:  Order webhook &gt; Is it an order?
+status: success | texts sent: 0 | http tries: 0</div>
+      </div>
+      <div class="step">
+        <p><strong>Optional: do it in real n8n and read each panel.</strong> Open the imported workflow, click the "Order webhook" node, copy its Test URL (it ends in <code>/webhook-test/orders</code>) and press "Listen for test event". Then post the evt_0002 body to it with curl. There is no captured output for this step, so none is printed here. What to look for: the same five shapes as step 5, one per node's output panel. Click "Look up customer" and confirm <code>event_id</code> is not in its output; click "Send the SMS" and check the body it sent still carries <code>evt_0002</code>, thanks to the reach-back.</p>
+        <div class="prompt-box good"><span class="label">★ Step 6 · a test event into real n8n</span>$ curl -s -X POST http://localhost:5678/webhook-test/orders \
+    -H 'Content-Type: application/json' \
+    -d '{"event_id":"evt_0002","ts":25328,"type":"order","customer_id":"c_071","amount":147}'
+
+# no captured output: read each node's output panel in the editor instead
+# expect: body-wrapped item &gt; same item &gt; 3 fields &gt; CRM answer &gt; status sent</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <p><strong>Read panels front to back.</strong> When a field is empty at the last step, open the first node's output and walk forward until the field disappears. The node where it vanishes is the node to fix, and it is rarely the one that errored.</p>
+    </div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 3</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li><strong>Name your own trigger type.</strong> For the candidate task from session 1, find out whether the app can call a webhook (instant) or only be checked on a schedule (polling). Write down which, and where in the app you found it.</li>
+      <li><strong>Write the item at each step.</strong> List the steps of your candidate and, under each, the fields that come out of it. Mark any step that fetches something, because it probably replaces the item rather than adding to it.</li>
+      <li><strong>Find one field that is dropped on the way.</strong> Pick a field the final action needs (an id, an amount, a timestamp) and trace it back. Is it still in the item when the action runs, or does the action have to reach back for it?</li>
+      <li><strong>Post the same test event twice</strong> to your tool (or to the n8n test URL from step 6) and note what happens. Two runs? One? Two messages in the mock's <code>/log</code>? Keep the note; session 5 starts from it.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and session 2 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · Zapier says instant triggers do not deduplicate "because apps only send new data". Why can an instant trigger still run your workflow twice for one event?</p>
+      <button class="qopt" type="button">A · It cannot: an instant trigger only fires once per event by definition</button>
+      <button class="qopt" type="button">B · Because Zapier polls the webhook URL every few minutes as well</button>
+      <button class="qopt" type="button">C · Because senders can resend: Stripe documents that an endpoint might occasionally receive the same event more than once, and nothing on the receiving side removes the repeat unless you build it</button>
+      <button class="qopt" type="button">D · Because the seen-list is cleared every time the event arrives</button>
+      <p class="qwhy">Both sources are accurate about their own side. Zapier does not dedupe instant triggers; Stripe does resend, with retries for up to three days in live mode. Together they mean one payment can arrive twice. Session 5 builds the guard.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">2 · In the send step after "Look up customer", <code>$json.event_id</code> comes back empty. Why, and what fixes it?</p>
+      <button class="qopt" type="button">A · The webhook lost it; add a second webhook</button>
+      <button class="qopt" type="button">B · The IF node removed it; switch the IF to the false branch</button>
+      <button class="qopt" type="button">C · It is under <code>body</code>; use <code>$json.body.event_id</code></button>
+      <button class="qopt" type="button">D · The HTTP lookup replaced the item with the CRM's answer, so <code>event_id</code> is not in it; reach back with <code>$('Shape the message').item.json.event_id</code></button>
+      <p class="qwhy">After the lookup the item is customer_id, phone and name, nothing else. <code>$json</code> reads that item. The reach-back reads the Set node's item, where event_id still lives. Option C would be right at the Set node, which is right after the webhook, and wrong here.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="1">
+      <p class="qtext">3 · A polling Zap is turned off for an afternoon and turned on again. What happens to its seen-id list?</p>
+      <button class="qopt" type="button">A · Nothing; the list is kept and every item that arrived in the afternoon runs</button>
+      <button class="qopt" type="button">B · It is cleared when the Zap is turned off, and when turned on one poll fills it again with what is there, so items present at that moment count as already seen</button>
+      <button class="qopt" type="button">C · It is cleared and every item in the app runs again from the beginning</button>
+      <button class="qopt" type="button">D · Zapier keeps a seen-list only for instant triggers</button>
+      <p class="qwhy">Zapier's deduplication docs: ids are stored when a Zap is turned on and the list is cleared when it is turned off. Re-enabling re-initialises it from a poll. A toggle is not a replay; items that arrived while it was off need a deliberate one.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">n8n docs: data structure</span><span class="note">"All data passed between nodes is an array of objects", each item wrapped in json; read at source and shown on a real trace</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Zapier Platform docs, "Deduplication"</span><span class="note">The id field as default primary key; ids stored when a Zap is turned on, cleared when turned off; read at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Zapier Help, "How Zapier handles duplicate data in Zaps", updated 2026-05-29</span><span class="note">"Instant triggers do not use deduplication because apps only send new data"; taught against Stripe's statement</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Make Help, "Operations" and "Credits"</span><span class="note">An operation is a module run to process data or check for new data; credits are the billing unit since 27 August</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Stripe docs, "Webhooks"</span><span class="note">Endpoints might receive the same event more than once; retries up to three days in live mode; track event ids</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">GitHub Docs, "Best practices for using webhooks"</span><span class="note">Respond 2XX within 10 seconds; a redelivery keeps the same X-GitHub-Delivery header</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">n8n docs: install with npm, against the npm engines field</span><span class="note">Docs say Node 20.19 to 24.x; n8n@2.41.6 declares node &gt;=24.0.0; both read 5 October 2026, and the disagreement is taught</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">The mock endpoints and the one-order trace</span><span class="note">Constructed for teaching: mock_server.py and trace_one.js are local stand-ins, and every output printed above is a real run of them</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Session 2 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Instant calls you, polling asks</b><span>Webhook: one POST when it happens. Polling: a timer, a list, a comparison by id.</span></div>
+      <div class="cheat-item"><b>The seen-list forgets on off</b><span>Zapier clears it when a Zap is turned off; one poll refills it on. A toggle is not a replay.</span></div>
+      <div class="cheat-item"><b>Item, bundle, field</b><span>n8n items <code>{json: {...}}</code>, Make bundles, Zapier mapped fields. Same parcel, three names.</span></div>
+      <div class="cheat-item"><b>A fetch replaces, it does not merge</b><span>After an HTTP lookup the item is the answer. Check the output panel before wiring the next step.</span></div>
+      <div class="cheat-item"><b>$json here, $('Name') back there</b><span><code>$('Shape the message').item.json.event_id</code> reaches past the step that dropped it. Renames break it.</span></div>
+      <div class="cheat-item"><b>Node 24 for current n8n</b><span>Docs say 20.19 to 24.x; the stable package needs 24 or newer (read 5 Oct 2026). Or use Docker.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>You have watched one order travel five nodes. Session 3 puts a price on that trip. Zapier counts a task for each successful action, Make counts a credit for each module run including the trigger check, and n8n counts one execution for the whole workflow, however many nodes it has. The same five nodes, priced three ways, give three very different answers at 500 runs a month and at 18,000.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Session 2 of 6 · learn-automation-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="01-worth-automating.html">← Prev: Is it worth the time?</a> &nbsp;·&nbsp; <a href="03-zapier-make-n8n.html">Next: Zapier, Make or n8n →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

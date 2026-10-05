@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Session 6 of 6. An automation you can leave alone has an owner, a one-page runbook, a row in an inventory and a review date. The state that silently resets when you pause it, the key windows that expire, and how to retire an automation when its task dies.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Leave it running - learn automation with phoebe">
+<meta property="og:description" content="Session 6 of 6. Owner, runbook, inventory, review date: the four things that keep a working automation working.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-automation-with-phoebe/courses/06-leave-it-running.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Leave it running - learn automation with phoebe">
+<meta name="twitter:description" content="Session 6 of 6. The inventory that finds the automation nobody owns.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Session 6 · Leave it running - learn automation with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-automation-with-phoebe</a> / Session 6 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn Automation with Phoebe · Session 6 of 6</div>
+    <h1>Leave it <span class="accent">running</span></h1>
+    <p class="sub">A workflow with a key, a dead-letter list and an alert survives a bad day. Whether it survives a year depends on things no node setting holds: whose it is, what to do when it breaks at 7am, where it is written down, and when someone last looked at it. Tonight every automation gets an owner, a one-page runbook, a row in one inventory and a review date. Then we look at the state that resets without telling you when an automation is paused or rebuilt, and at the step everybody skips: switching it off when the task it served has gone.</p>
+    <div class="chip-row">
+      <span class="chip level">🟠 Applied</span>
+      <span class="chip audience">Anyone who owns an automation</span>
+      <span class="chip audience">Teams with more than three</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:4">3-18 · Owner, inventory, the year ahead</span>
+      <span class="a3" style="flex:5">18-40 · Build-along: inventory and runbook</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where we start</h2>
+    </div>
+    <p class="lede">Session 1 asked how long the task would live; session 5 made the workflow fail safely. Between those two sits the long middle of an automation's life, where nothing is wrong for months and then something small is: a password rotated, a field renamed, a Zap paused for a migration and switched back on. Automations rarely fail loudly in that middle. They go quiet, and the cost of quiet is paid by whoever expected the text, the record or the file.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">★ Build-along = run it yourself</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> An inventory row and a one-page runbook for the automation you built across these six sessions, a script that reads the inventory and tells you which automations need a person this week, and a dated plan for the three pieces of state that can reset under you.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers ownership and the runbook</span>
+      <h2>One name, one page</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">Every automation needs a named person who owns it: not a team, not "ops", a person who gets the alert and can switch it off. And every automation needs one page that lets someone else act when that person is asleep. The page is short because the reader is in a hurry, and the most important line on it is the one that says how to replay a failure without sending anything twice.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A one-page runbook for the Order SMS automation, sketched as a sheet with seven sections: what it does, owner and backup, trigger and side effect, how you know it is broken, how to pause it, how to replay safely, and where the dead-letter list is. The replay section is highlighted: use the event id as the key, check the delivery log first, never replay a red run blind. An arrow from the alert on the left leads into the page.">
+        <defs>
+          <filter id="s6aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="83" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s6aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s6aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s6aH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s6aL { font: 700 11.5px Inter, sans-serif; fill: #11233B; }
+          .s6aS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s6aB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s6aN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s6aH" x="30" y="26">THE PAGE A TIRED PERSON READS</text>
+        <text class="s6aS" x="260" y="26">runbook for the Order SMS automation, one sheet, seven sections</text>
+
+        <g filter="url(#s6aSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- the alert -->
+          <rect x="30" y="120" width="150" height="70" rx="10" transform="rotate(-1.2 105 155)" fill="#EBF3FD"/>
+          <path d="M184 155 L236 155" marker-end="url(#s6aAr)"/>
+          <!-- the sheet -->
+          <rect x="246" y="44" width="600" height="250" rx="6" transform="rotate(0.4 546 169)" fill="#FFFFFF"/>
+          <path d="M262 106 L830 106" stroke="#DCE5F0"/>
+          <path d="M262 160 L830 160" stroke="#DCE5F0"/>
+          <path d="M262 236 L830 236" stroke="#DCE5F0"/>
+          <path d="M546 54 L546 156" stroke="#DCE5F0"/>
+          <path d="M546 240 L546 286" stroke="#DCE5F0"/>
+          <!-- the highlighted replay section -->
+          <rect x="262" y="168" width="568" height="60" rx="6" fill="#FDEEE4" stroke="#B5480C"/>
+        </g>
+
+        <text class="s6aL" x="44" y="146">alert: evt_0251</text>
+        <text class="s6aS" x="44" y="162">parked, Send the SMS,</text>
+        <text class="s6aS" x="44" y="176">503 · owner: Mei</text>
+
+        <text class="s6aL" x="266" y="70">1 · What it does</text>
+        <text class="s6aS" x="266" y="86">texts each order once, on webhook</text>
+        <text class="s6aL" x="556" y="70">2 · Owner and backup</text>
+        <text class="s6aS" x="556" y="86">Mei, then Arjun</text>
+        <text class="s6aL" x="266" y="126">3 · Trigger and side effect</text>
+        <text class="s6aS" x="266" y="142">webhook in, one SMS out</text>
+        <text class="s6aL" x="556" y="126">4 · How you know it is broken</text>
+        <text class="s6aS" x="556" y="142">alert, or dead-letter list not empty</text>
+        <text class="s6aB" x="276" y="188">6 · How to replay safely</text>
+        <text class="s6aS" x="276" y="204">check the delivery log for the event id first; replay with the same key;</text>
+        <text class="s6aS" x="276" y="220">never replay a red run blind, it may already have sent</text>
+        <text class="s6aL" x="266" y="258">5 · How to pause it</text>
+        <text class="s6aS" x="266" y="274">deactivate; senders retry, check how long</text>
+        <text class="s6aL" x="556" y="258">7 · The dead-letter list</text>
+        <text class="s6aS" x="556" y="274">redriven 23:30; empty it by hand if not</text>
+
+        <text class="s6aN" x="30" y="316">Seven sections, one page. The highlighted one prevents the 11 duplicate texts the bench counted on rung 2.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the rust section is the one a stranger gets wrong without it: a red run is not proof that nothing was sent</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span>Why a person, not a team<span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>An alert sent to a team channel is read by everyone and acted on by nobody, a pattern most people who have shared an on-call channel will recognise. Name one person and one backup. The owner does not have to fix every failure; they have to decide, within a working day, whether it is fixed, parked or switched off. The automation's row in the inventory carries their name, and an automation without a name is the first thing the review script flags.</p>
+        <p>Ownership also answers the question session 1 left open: who knows how long the task will live? The owner is the person who hears first when the report is cancelled or the client leaves.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>What goes on the page, and where the craft lives<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Seven sections are enough for a no-code workflow: what it does in one line; owner and backup; the trigger and every side effect; how you know it is broken (the alert, an empty or non-empty dead-letter list, a daily count that stops moving); how to pause it, and what happens to events while it is paused; how to replay safely; and where the dead-letter list is and when it is redriven.</p>
+        <p>"How to replay safely" deserves its own line because the executions list misleads. A lost reply ends red after the message has gone, and the bench counted 11 runs like that on one day. The rule for the page: look the event id up in the receiver's log first, and replay only with the same idempotency key. Writing runbooks that a tired person can follow is a craft of its own, taught in depth in the <a href="https://phoebefu6.github.io/learn-data-reliability-with-phoebe/courses/b4-runbooks.html">reliability course's runbooks session</a>.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>The automation the operator forgot how to do by hand.</strong> Google's SRE book describes the downside of highly effective automation: "human operators are progressively more relieved of useful direct contact with the system as the automation covers more and more daily activities over time." The small-team version is the invoice workflow that ran for two years: when it stopped, nobody remembered which folder the files used to go into. Keep the manual procedure as section 5's last line, and run it by hand once a year.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers the inventory</span>
+      <h2>Every automation, one list</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">Three automations fit in your head. Ten do not, and the ones you forget are the ones that fail quietly. One list, one row per automation, with the columns that answer the questions this whole series asked: what triggers it, what it changes in the world, whether a retry can repeat that change, where failures go, who hears about them, and when someone last looked.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn inventory sheet with five automations as rows and five check columns: owner, runbook, alert, retry-safe and reviewed on time. Order SMS passes all five. Leads into CRM misses runbook and review. Invoice filing misses owner, runbook, alert and review and is circled as the most urgent. Monday status email is not retry-safe. Weekly sales number misses runbook, retry safety and review. Constructed rows.">
+        <defs>
+          <filter id="s6bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="89" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s6bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+        </defs>
+        <style>
+          .s6bH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s6bL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s6bS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s6bB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s6bA { font: 700 11px Inter, sans-serif; fill: #0A64C4; letter-spacing: .04em; }
+          .s6bN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s6bH" x="30" y="26">ONE ROW EACH, FIVE QUESTIONS</text>
+        <text class="s6bS" x="250" y="26">constructed inventory, read by review_inventory.py on 5 October 2026</text>
+
+        <text class="s6bA" x="352" y="62" text-anchor="middle">OWNER</text>
+        <text class="s6bA" x="452" y="62" text-anchor="middle">RUNBOOK</text>
+        <text class="s6bA" x="552" y="62" text-anchor="middle">ALERT</text>
+        <text class="s6bA" x="652" y="62" text-anchor="middle">RETRY-SAFE</text>
+        <text class="s6bA" x="762" y="62" text-anchor="middle">REVIEWED</text>
+
+        <g filter="url(#s6bSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M30 74 L840 74" stroke="#C7D4E5"/>
+          <path d="M30 274 L840 274" stroke="#C7D4E5"/>
+          <!-- row 3 highlight -->
+          <rect x="30" y="160" width="810" height="34" rx="6" fill="#FDEEE4" stroke="#B5480C"/>
+          <!-- passes: filled circles; misses: open circles -->
+          <circle cx="352" cy="96" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="452" cy="96" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="552" cy="96" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="652" cy="96" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="762" cy="96" r="7" fill="#0A64C4" stroke="#0A64C4"/>
+          <circle cx="352" cy="137" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="452" cy="137" r="7" fill="#FFFFFF"/><circle cx="552" cy="137" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="652" cy="137" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="762" cy="137" r="7" fill="#FFFFFF"/>
+          <circle cx="352" cy="177" r="7" fill="#FFFFFF" stroke="#B5480C"/><circle cx="452" cy="177" r="7" fill="#FFFFFF" stroke="#B5480C"/><circle cx="552" cy="177" r="7" fill="#FFFFFF" stroke="#B5480C"/><circle cx="652" cy="177" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="762" cy="177" r="7" fill="#FFFFFF" stroke="#B5480C"/>
+          <circle cx="352" cy="217" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="452" cy="217" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="552" cy="217" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="652" cy="217" r="7" fill="#FFFFFF"/><circle cx="762" cy="217" r="7" fill="#0A64C4" stroke="#0A64C4"/>
+          <circle cx="352" cy="257" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="452" cy="257" r="7" fill="#FFFFFF"/><circle cx="552" cy="257" r="7" fill="#0A64C4" stroke="#0A64C4"/><circle cx="652" cy="257" r="7" fill="#FFFFFF"/><circle cx="762" cy="257" r="7" fill="#FFFFFF"/>
+        </g>
+
+        <text class="s6bL" x="44" y="100">Order SMS</text>
+        <text class="s6bS" x="200" y="100">n8n · 18,400 runs</text>
+        <text class="s6bL" x="44" y="141">Leads into CRM</text>
+        <text class="s6bS" x="200" y="141">Zapier</text>
+        <text class="s6bB" x="44" y="181">Invoice filing</text>
+        <text class="s6bB" x="200" y="181">Make · nobody</text>
+        <text class="s6bL" x="44" y="221">Monday status email</text>
+        <text class="s6bS" x="200" y="221">Zapier</text>
+        <text class="s6bL" x="44" y="261">Weekly sales number</text>
+        <text class="s6bS" x="200" y="261">n8n</text>
+
+        <text class="s6bN" x="30" y="304">Filled = in place. The rust row fails four of five, and failing "alert" means nobody would hear it stop.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the most dangerous row is not the one with the biggest volume, it is the one with no owner and no alert</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>The twelve columns, and the five that get checked<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The inventory has twelve columns: name, tool, owner, trigger, side effect, idempotency, dead letter, alert to, runbook, last review, review every (days), units a month. The review script checks five things from them: is there an owner, is there a runbook, does a failure reach a person, can a retry repeat the side effect (a side effect with no idempotency), and is the review overdue. Each check maps to one session: the owner and runbook to tonight, the alert and dead letter to session 5, idempotency to sessions 4 and 5, units to session 3, and the review date back to session 1's question about lifetime.</p>
+        <p>Keep it in one place everybody can read: a sheet, a CSV in a repository, a database table. Two lists will disagree within a quarter, and the automation that is missing from the one people check is the one that will fail unnoticed.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>Units a month: the column that catches a bill<span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The bench's dead-letter rung ran 613 executions on one day, about 18,400 a month, which is the number on the Order SMS row. On per-execution billing that sits above n8n's Starter plan as read on 5 October 2026; on Zapier, the same workflow's 714 tasks a day would be about 21,000 a month. Recording units next to the automation means the review notices a tier change before the invoice does. Re-read the pricing page at each review: prices and units change (Make moved from operations to credits on 27 August).</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers state that resets, review cadence, retirement</span>
+      <h2>The year ahead, and the end</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">Some of what makes an automation safe is state that lives somewhere you did not choose: a list of ids a trigger has seen, a store of keys a provider remembers, a dedupe history with a size limit. That state resets on pause, expires on a clock, or rolls over when it fills. A review date is when you check it; a retirement date is when you stop paying for it.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="One automation's year on a hand-drawn rail. Quarterly review marks in January, April, July and October. In March the Zap is paused for a migration and switched back on, and the seen-id list resets: forms submitted while it was off are cached as already seen. In June a dead-letter redrive runs five days late, past a 24-hour key window. In September the dedupe history passes 10,000 items and forgets the oldest. In December the report it served is cancelled and the automation is retired.">
+        <defs>
+          <filter id="s6cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="97" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <marker id="s6cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s6cH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s6cL { font: 700 11.5px Inter, sans-serif; fill: #11233B; }
+          .s6cS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s6cB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s6cA { font: 700 11px Inter, sans-serif; fill: #0A64C4; }
+          .s6cN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s6cH" x="30" y="26">ONE AUTOMATION, ONE YEAR</text>
+        <text class="s6cS" x="230" y="26">a constructed year · review marks every quarter</text>
+
+        <g filter="url(#s6cSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M60 140 L824 140" marker-end="url(#s6cAr)"/>
+          <!-- quarterly review ticks -->
+          <path d="M70 128 L70 152" stroke="#0A64C4"/>
+          <path d="M260 128 L260 152" stroke="#0A64C4"/>
+          <path d="M450 128 L450 152" stroke="#0A64C4"/>
+          <path d="M640 128 L640 152" stroke="#0A64C4"/>
+          <!-- event dots -->
+          <circle cx="170" cy="140" r="7" fill="#FDEEE4" stroke="#B5480C"/>
+          <circle cx="370" cy="140" r="7" fill="#FDEEE4" stroke="#B5480C"/>
+          <circle cx="560" cy="140" r="7" fill="#FDEEE4" stroke="#B5480C"/>
+          <rect x="752" y="130" width="22" height="20" rx="3" fill="#B5480C" stroke="#B5480C"/>
+        </g>
+
+        <text class="s6cA" x="70" y="172" text-anchor="middle">Jan review</text>
+        <text class="s6cA" x="260" y="172" text-anchor="middle">Apr review</text>
+        <text class="s6cA" x="450" y="172" text-anchor="middle">Jul review</text>
+        <text class="s6cA" x="640" y="172" text-anchor="middle">Oct review</text>
+
+        <text class="s6cL" x="170" y="64" text-anchor="middle">Mar: paused, back on</text>
+        <text class="s6cS" x="170" y="80" text-anchor="middle">seen-id list resets; forms</text>
+        <text class="s6cS" x="170" y="96" text-anchor="middle">sent while off never fire</text>
+
+        <text class="s6cL" x="370" y="210" text-anchor="middle">Jun: redrive 5 days late</text>
+        <text class="s6cS" x="370" y="226" text-anchor="middle">key window may be 24 h;</text>
+        <text class="s6cS" x="370" y="242" text-anchor="middle">check the log before resend</text>
+
+        <text class="s6cL" x="560" y="64" text-anchor="middle">Sep: history full</text>
+        <text class="s6cS" x="560" y="80" text-anchor="middle">dedupe keeps 10,000 ids</text>
+        <text class="s6cS" x="560" y="96" text-anchor="middle">by default, oldest forgotten</text>
+
+        <text class="s6cB" x="763" y="210" text-anchor="middle">Dec: report cancelled</text>
+        <text class="s6cS" x="763" y="226" text-anchor="middle">retire: off, archive JSON,</text>
+        <text class="s6cS" x="763" y="242" text-anchor="middle">revoke the credentials</text>
+
+        <text class="s6cN" x="30" y="282">Three resets you did not schedule, four reviews you did. The reviews are where the resets get caught.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - each rust mark is state that lives outside your workflow and changes without telling it</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>Three pieces of state that reset under you<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>A polling trigger's seen-list.</strong> Zapier's platform documentation says that when a polling Zap is first turned on, Zapier makes an initial call to the app and stores each item's id, and when the Zap is turned off, "that list is cleared." Read together, switching a polling Zap off and on again re-learns everything currently in the app as already seen, so items created while it was off do not trigger. Test it on your own Zap before you rely on it, and after any pause, replay the gap deliberately.</p>
+        <p><strong>A provider's key window.</strong> Stripe says idempotency keys can be removed once they are at least 24 hours old, after which a repeat with the same key is treated as a new request. A dead-letter list redriven the same night is protected by its keys; one redriven five days later may not be. Check the receiver's log for each event before a late redrive.</p>
+        <p><strong>A dedupe history with a size.</strong> n8n's Remove Duplicates node keeps 10,000 items by default when it remembers values across executions. A busy workflow rolls past that and forgets the oldest ids; a very late duplicate then gets through.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>A review that takes fifteen minutes, and when to retire<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Every 90 days for anything that touches customers, every 180 for internal chores: read the last month of failures and the dead-letter list; check the connection and credentials are still valid; re-read the pricing page and update units a month; confirm the owner is still the owner; ask the owner whether the task still exists. Write the date in the inventory. The <a href="https://phoebefu6.github.io/learn-pkm-with-phoebe/">PKM course</a> has the habit side of a review that actually happens.</p>
+        <p>Retire an automation when its task has died, when it fails the break-even line on the numbers you now have, or when nobody will own it. Retiring is four steps: switch it off; export and archive its JSON with the date; revoke the credentials and webhook URLs it held; mark the row retired rather than deleting it, so the next person can see it existed.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>The deprecation notice in the startup log.</strong> When the current n8n release starts outside a container, its own log now says that running n8n outside a container is deprecated and that future versions will require the official Docker image. A self-hosted automation that is never reviewed meets that sentence on the day an update stops starting. A review that reads the startup log once a quarter meets it a year early.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Inventory, runbook, review date</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">Five steps. You will add your own automation to a five-row inventory, run the review script against it, write the runbook page for it, and set the first review date. The script needs only Python 3; the inventory rows besides yours are constructed. Every output shown is what the script prints on the file as shipped.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The build-along as a loop. Your automation becomes a row in the inventory CSV, the review script reads every row and prints the flags, the flags become fixes in the runbook and the workflow, and the review date sends you back to the script in 90 days.">
+        <defs>
+          <filter id="s6dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="101" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s6dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s6dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s6dH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s6dL { font: 700 11.5px Inter, sans-serif; fill: #11233B; }
+          .s6dS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s6dB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s6dN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s6dSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="30" y="56" width="170" height="80" rx="8" transform="rotate(-1 115 96)" fill="#EBF3FD"/>
+          <rect x="240" y="56" width="170" height="80" rx="8" transform="rotate(0.8 325 96)" fill="url(#s6dHc)"/>
+          <rect x="450" y="56" width="170" height="80" rx="8" transform="rotate(-0.6 535 96)" fill="#FFFFFF"/>
+          <rect x="660" y="56" width="180" height="80" rx="8" transform="rotate(0.7 750 96)" fill="#FDEEE4" stroke="#B5480C"/>
+          <path d="M204 96 L234 96" marker-end="url(#s6dAr)"/>
+          <path d="M414 96 L444 96" marker-end="url(#s6dAr)"/>
+          <path d="M624 96 L654 96" marker-end="url(#s6dAr)"/>
+          <path d="M750 140 C750 196 325 196 325 146" stroke-dasharray="6 5" marker-end="url(#s6dAr)"/>
+        </g>
+
+        <text class="s6dH" x="30" y="40">STEPS 1-2</text>
+        <text class="s6dH" x="240" y="40">STEP 3</text>
+        <text class="s6dH" x="450" y="40">STEP 4</text>
+        <text class="s6dH" x="660" y="40">STEP 5</text>
+
+        <text class="s6dL" x="44" y="88">your row</text>
+        <text class="s6dS" x="44" y="106">twelve columns</text>
+        <text class="s6dL" x="254" y="88">review script</text>
+        <text class="s6dS" x="254" y="106">flags per row</text>
+        <text class="s6dL" x="464" y="88">runbook page</text>
+        <text class="s6dS" x="464" y="106">seven sections</text>
+        <text class="s6dB" x="674" y="88">review date</text>
+        <text class="s6dS" x="674" y="106">90 or 180 days</text>
+        <text class="s6dS" x="452" y="216" text-anchor="middle">and round again in a quarter</text>
+
+        <text class="s6dN" x="30" y="240">The loop is the product. A runbook nobody re-reads drifts as fast as the workflow it describes.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the dashed return arrow is the review date; without it the other three boxes are a snapshot</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Download the inventory and the script.</strong> <a href="../materials/inventory.csv">inventory.csv</a> holds five constructed automations; <a href="../materials/review_inventory.py">review_inventory.py</a> reads it. Put both in one folder.</p>
+        <div class="prompt-box good"><span class="label">★ Step 1 · the columns</span>name,tool,owner,trigger,side_effect,idempotency,dead_letter,alert_to,runbook,last_review,review_every_days,units_month
+Order SMS,n8n,Mei,webhook,sends SMS,event_id key,yes,ops channel,runbooks/order-sms.md,2026-09-15,90,18400</div>
+      </div>
+      <div class="step">
+        <p><strong>Run the review on the file as shipped.</strong> The script fixes "today" at 5 October 2026 so the output below is reproducible; change <code>TODAY</code> to <code>date.today()</code> for real use.</p>
+        <div class="prompt-box good"><span class="label">★ Step 2 · python3 review_inventory.py</span>Order SMS            n8n     ok
+Leads into CRM       Zapier  no runbook, review overdue since 2026-05-31
+Invoice filing       Make    no owner, no runbook, fails silently, review overdue since 2026-05-19
+Monday status email  Zapier  a retry can repeat: sends email
+Weekly sales number  n8n     no runbook, a retry can repeat: posts message, review overdue since 2026-09-29
+1 without an owner, 4 without a dead-letter list, of 5</div>
+      </div>
+      <div class="step">
+        <p><strong>Add your own automation as a sixth row</strong> and run the script again. Be honest in the idempotency column: "none" if a retry would repeat the side effect. Whatever it flags is your to-do list, in priority order: no owner and no alert first, because those are the ones that fail silently.</p>
+        <div class="prompt-box good"><span class="label">★ Step 3 · your row, then re-run</span>Leads into CRM v2,n8n,&lt;your name&gt;,webhook,creates contact,email lookup,yes,&lt;your channel&gt;,runbooks/leads.md,2026-10-05,90,&lt;runs a month&gt;
+
+$ python3 review_inventory.py
+(your row should print "ok"; if it does not, the flags are tonight's homework)</div>
+      </div>
+      <div class="step">
+        <p><strong>Write the runbook page.</strong> Seven headings, one or two lines each. Section 6 is the one to get exactly right.</p>
+        <div class="prompt-box good"><span class="label">★ Step 4 · runbooks/leads.md</span>1. What it does: creates one CRM contact per web-form submission.
+2. Owner and backup: &lt;you&gt;, then &lt;someone&gt;.
+3. Trigger and side effect: webhook from the form tool; creates a contact.
+4. How you know it is broken: alert in &lt;channel&gt;; dead-letter list not empty; daily contact count flat.
+5. How to pause it: deactivate the workflow; the form tool retries its webhook (check how long).
+   Manual fallback: export the form responses and import them by hand.
+6. How to replay safely: search the CRM for the email first; replay only failed events,
+   with the same key; never replay a red run without checking.
+7. Dead-letter list: &lt;where&gt;, redriven &lt;when&gt;, emptied by hand if the redrive fails.</div>
+      </div>
+      <div class="step">
+        <p><strong>Set the review date and walk the final checklist.</strong> Put the next review in your calendar with the inventory link in it. Then check your automation against the six sessions, one line each.</p>
+        <div class="prompt-box good"><span class="label">★ Step 5 · the final checklist</span>[ ] 1  It passes the break-even line, or the non-time reason is written down.
+[ ] 2  Every field the action needs survives the trip; reach-backs name nodes that exist.
+[ ] 3  Units a month are recorded against today's pricing page, with the date.
+[ ] 4  Reads retry, writes retry only with a key the receiver stores.
+[ ] 5  Failures park on a list, the list is redriven, and an alert names the event.
+[ ] 6  It has an owner, a runbook, an inventory row and a review date.</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <p><strong>The inventory is the one place.</strong> If your team already keeps a list of systems, add the twelve columns to it rather than starting a second list. Two lists that describe the same automations will disagree, and the one nobody checks will be the one that was right.</p>
+    </div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>After the last session</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li><strong>Inventory every automation you own or depend on,</strong> including the ones someone else built and the browser extensions that act on your behalf. Run the review script on the result.</li>
+      <li><strong>Fix the top flag</strong> the script prints, then re-run it and confirm that row is clean.</li>
+      <li><strong>Pause and resume test.</strong> On a test copy of one polling automation, switch it off, create an item, switch it on, and record whether the item triggered. Write the answer in its runbook.</li>
+      <li><strong>Retire one automation</strong> whose task has died: switch off, archive the JSON with the date, revoke its credentials, mark the row retired.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and session 6 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">1 · A polling Zap was switched off for a weekend migration and switched back on on Monday. Forms submitted over the weekend did not create records. Why, according to Zapier's documentation?</p>
+      <button class="qopt" type="button">A · Zapier deletes form data older than 24 hours</button>
+      <button class="qopt" type="button">B · The Zap ran out of tasks</button>
+      <button class="qopt" type="button">C · Polling triggers only see items created during business hours</button>
+      <button class="qopt" type="button">D · Turning a Zap off clears its list of seen ids, and turning it on stores the ids of everything already in the app with one initial poll, so the weekend's items are recorded as seen rather than triggered</button>
+      <p class="qwhy">The seen-list is state outside your workflow. After any pause, replay the gap deliberately and write that step into the runbook. Test the behaviour on your own Zap before relying on it.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="1">
+      <p class="qtext">2 · A dead-letter list is redriven to Stripe five days after the failures, with the original idempotency keys. What should happen first?</p>
+      <button class="qopt" type="button">A · Nothing; the keys guarantee nothing is repeated</button>
+      <button class="qopt" type="button">B · Check each event in the receiver's log first: Stripe may remove keys that are at least 24 hours old, so a five-day-old key may no longer protect a repeat</button>
+      <button class="qopt" type="button">C · Generate new keys so the requests are accepted</button>
+      <button class="qopt" type="button">D · Redrive twice to be sure</button>
+      <p class="qwhy">A key protects a repeat only while the receiver remembers it. Late redrives are where key windows matter; the runbook's replay section says to look before resending.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">3 · The review script flags "Invoice filing: no owner, no runbook, fails silently, review overdue" and "Order SMS: ok". The Order SMS row has far more runs. Which needs a person first?</p>
+      <button class="qopt" type="button">A · Invoice filing: with no owner and no alert, it can stop and nobody will hear; volume does not make an automation risky, silence does</button>
+      <button class="qopt" type="button">B · Order SMS, because it has the most runs</button>
+      <button class="qopt" type="button">C · Neither; overdue reviews are paperwork</button>
+      <button class="qopt" type="button">D · Whichever is cheapest to fix</button>
+      <p class="qwhy">An automation that fails loudly gets fixed. One that fails silently fails for as long as nobody looks. Owner and alert first, then runbook, then the review date.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Zapier polling deduplication and the seen-id list</span><span class="note">Zapier platform docs read at source: initial poll stores ids when turned on, the list is cleared when turned off; the weekend consequence is our reading of that text, labelled as such</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Stripe idempotency key pruning</span><span class="note">Read at source: keys can be removed once at least 24 hours old</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">n8n Remove Duplicates history size</span><span class="note">Read at source: 10,000 items by default, scope node or workflow</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Google SRE book, ch. 7, operators losing contact with the system</span><span class="note">Quoted at source</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">n8n's container deprecation notice</span><span class="note">Printed in the startup log of n8n 2.41.6 in this build</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Owner, runbook, inventory, review cadence</span><span class="note">Practice, not a cited standard; runbook craft linked to the reliability course; the inventory rows are constructed and the script output is a real run</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Session 6 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>One name, one backup</b><span>A person, not a team, who decides within a day: fixed, parked or off.</span></div>
+      <div class="cheat-item"><b>Seven-section runbook</b><span>Does, owner, trigger and side effect, broken how, pause, replay safely, dead letters.</span></div>
+      <div class="cheat-item"><b>Never replay a red run blind</b><span>A lost reply ends red after the send. Check the receiver's log, reuse the key.</span></div>
+      <div class="cheat-item"><b>One inventory, twelve columns</b><span>The script flags no owner, no runbook, silent, unsafe retry, overdue review.</span></div>
+      <div class="cheat-item"><b>State that resets</b><span>Seen-lists clear on pause, keys expire (Stripe: 24 h or more), dedupe history fills.</span></div>
+      <div class="cheat-item"><b>Retire on purpose</b><span>Off, archive the JSON, revoke credentials, mark the row retired.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>This is the last one. You now have a task that passed the line, a workflow whose data you can follow, a bill you can predict, a bench that showed you what each rung buys, the rungs built, and a page and a row that keep it alive. If the steps in your workflow start needing judgement, AI drafting and triage are next door in <a href="https://phoebefu6.github.io/learn-ai-productivity-with-phoebe/">AI-Powered Productivity</a>; if your workflows are turning into data pipelines, <a href="https://phoebefu6.github.io/learn-data-orchestration-with-phoebe/">Data Orchestration</a> picks up from here.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Session 6 of 6 · learn-automation-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="05-when-it-fails.html">← Prev: When a step fails</a> &nbsp;·&nbsp; <a href="../index.html">Course home</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

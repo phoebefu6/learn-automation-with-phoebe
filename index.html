@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Six sessions on no-code and low-code automation that does not break: what is worth automating, how triggers hand data to actions, what Zapier, Make and n8n actually charge for, and what happens on the day a step fails. A real workflow bench runs n8n-format workflows over a seeded day in your browser. Free, by Phoebe Fu.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Learn Automation with Phoebe">
+<meta property="og:description" content="One day, 344 orders, four ways to build the same workflow. Retry everything texts 11 customers twice; a key and a dead-letter queue text all 344 exactly once.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-automation-with-phoebe/">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Learn Automation with Phoebe">
+<meta name="twitter:description" content="Zapier, Make and n8n, and the failure semantics nobody shows you, measured on a real workflow bench.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Learn Automation with Phoebe</title>
+<link rel="stylesheet" href="assets/style.css?v=1">
+<style>
+
+  .stats-row { display: flex; gap: 2.4rem; margin-top: 1.5rem; flex-wrap: wrap; }
+  .stat b { display: block; font-size: 2.1rem; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: .72rem; opacity: 1; text-transform: uppercase; letter-spacing: .09em; font-weight: 600; }
+
+  .course-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+  .course-card {
+    border: 1px solid var(--hairline);
+    border-top: 4px solid var(--diff, var(--indigo));
+    border-radius: var(--radius);
+    padding: 1.2rem 1.3rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    text-decoration: none;
+    color: var(--ink);
+    background: #fff;
+    transition: box-shadow .15s ease, border-color .15s ease, transform .15s ease;
+    position: relative;
+  }
+  .course-card:hover { border-color: var(--indigo-soft); border-top-color: var(--diff, var(--indigo)); box-shadow: 0 8px 28px rgba(var(--shadow-rgb),.16); transform: translateY(-3px); }
+  .course-card .cicon { font-size: 1.7rem; line-height: 1; }
+  .course-card .cnum { font-size: .72rem; font-weight: 700; color: var(--indigo-deep); text-transform: uppercase; letter-spacing: .1em; }
+  .course-card h3 { font-size: 1.05rem; font-weight: 800; line-height: 1.3; }
+  .course-card p { font-size: .85rem; color: var(--muted); flex: 1; }
+  .course-card .meta { display: flex; gap: .4rem; flex-wrap: wrap; }
+
+  .diff-legend { display: flex; gap: 1rem; margin-top: 1.6rem; font-size: .74rem; color: var(--muted); font-weight: 600; flex-wrap: wrap; }
+  .diff-legend i { display: inline-block; width: .85rem; height: .35rem; border-radius: 999px; margin-right: .35rem; vertical-align: middle; }
+
+  .paths { margin-top: 2.6rem; }
+  .paths h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: .3rem; }
+  .paths .plede { color: var(--muted); font-size: .92rem; margin-bottom: .8rem; }
+  .path { display: flex; gap: .55rem; align-items: center; padding: .75rem 0; border-bottom: .5px solid var(--hairline); flex-wrap: wrap; }
+  .path:last-child { border-bottom: none; }
+  .path b { min-width: 15.5rem; font-size: .9rem; }
+  .path .pstep { background: var(--indigo-50); color: var(--indigo-deep); border-radius: 999px; padding: .16rem .68rem; font-weight: 700; font-size: .8rem; text-decoration: none; transition: all .12s ease; }
+  .path .pstep:hover { background: var(--indigo); color: #fff; }
+  .path .parr { color: var(--muted); font-weight: 700; }
+
+  .mm-section { margin-top: 1.6rem; }
+  .mm-section h2 { font-size: 1.3rem; font-weight: 800; margin-bottom: .2rem; }
+  .mm-section .mm-lede { color: var(--muted); font-size: .92rem; margin-bottom: .4rem; }
+  .mm-wrap { border: 1px solid var(--hairline); border-radius: var(--radius); background: linear-gradient(180deg,#fff,var(--indigo-50)); padding: .6rem; overflow-x: auto; }
+  .mm-svg { width: 100%; height: auto; display: block; max-width: 60rem; margin: 0 auto; min-width: 34rem; }
+  .mm-link { cursor: pointer; text-decoration: none; }
+  .mm-node rect { transition: opacity .15s ease, filter .15s ease; }
+  .mm-node text { pointer-events: none; }
+  .mm-link:hover .mm-node rect { filter: brightness(1.06); }
+  .mm-edge { transition: opacity .15s ease; }
+
+  .not-this { border: 1px solid var(--hairline); border-left: 4px solid var(--clay); border-radius: var(--radius); background: #fff; padding: 1.1rem 1.3rem; margin-top: 1.2rem; }
+  .not-this h3 { font-size: .95rem; font-weight: 800; margin-bottom: .5rem; }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn with Phoebe · Productivity &amp; Knowledge Systems</div>
+    <h1>Learn <span class="accent">Automation</span> with Phoebe</h1>
+    <p class="sub">Automate the boring parts with Zapier, Make or n8n, and build them so they do not break. Most automation tutorials end when the first run turns green. The trouble starts later: a reply that never arrives after the message already went out, a provider that is down for half an hour, a retry that texts a customer twice, a run that fails silently and an order nobody hears about. Six sessions on deciding what is worth automating, how a trigger hands data to an action, what each tool really charges for, and the four rungs between a workflow that works on Tuesday and one you can leave running for a year.</p>
+    <div class="stats-row">
+      <div class="stat"><b data-count="6">6</b><span>sessions</span></div>
+      <div class="stat"><b data-count="600">600</b><span>events on the bench</span></div>
+      <div class="stat"><b data-count="4">4</b><span>rungs to reliable</span></div>
+      <div class="stat"><b data-count="3">3</b><span>pricing models compared</span></div>
+      <div class="stat"><b data-count="45">45</b><span>min per session</span></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section">
+    <div class="paths" style="margin-top:0">
+      <h2>The six sessions 🎯 <span style="font-size:.85rem;font-weight:600;color:var(--muted)">· from "this is boring" to a workflow with an owner</span></h2>
+      <p class="plede">The running example is one workflow: an order arrives by webhook, the customer is looked up, and a text message goes out. You import it into n8n on your own machine in session 2, run four versions of it on the bench in session 4, and give it a runbook in session 6. Every build-along runs without a paid account.</p>
+    </div>
+
+    <div class="course-grid">
+      <a class="course-card" href="courses/01-worth-automating.html" style="--diff:#34D399">
+        <span class="cicon">⏳</span>
+        <span class="cnum">Session 1 · foundations</span>
+        <h3>Is it worth the time?</h3>
+        <p>Frequency x minutes x lifetime against build plus upkeep. xkcd 1205 read cell by cell, the two costs it leaves out, and the Google SRE argument that time is not the only return. Price five of your own tasks.</p>
+        <span class="meta"><span class="pill amber">▶ Start here</span></span>
+      </a>
+      <a class="course-card" href="courses/02-triggers-and-actions.html" style="--diff:#FBBF24">
+        <span class="cicon">🔌</span>
+        <span class="cnum">Session 2 · core</span>
+        <h3>Triggers, actions and the data between</h3>
+        <p>Instant versus polling triggers, what an item, a bundle and a field are, and how one step reads another's output. Run n8n locally, import a real five-node workflow, and follow one order through it.</p>
+        <span class="meta"><span class="pill">n8n on your machine</span></span>
+      </a>
+      <a class="course-card" href="courses/03-zapier-make-n8n.html" style="--diff:#FBBF24">
+        <span class="cicon">🧮</span>
+        <span class="cnum">Session 3 · core</span>
+        <h3>Zapier, Make or n8n</h3>
+        <p>Tasks, credits and executions: what each tool bills, read from its own pricing pages and dated. Self-hosting versus cloud, what n8n's licence allows, and the same workflow priced three ways.</p>
+        <span class="meta"><span class="pill">dated pricing, re-verify</span></span>
+      </a>
+      <a class="course-card" href="courses/04-the-workflow-bench.html" style="--diff:#F87171">
+        <span class="cicon">🎛️</span>
+        <span class="cnum">Session 4 · bench night</span>
+        <h3>The workflow bench</h3>
+        <p>Real n8n-format workflows over a seeded day of 600 events with timeouts, 500s, lost replies and an outage. No retry, retry everything, an idempotency key, a dead-letter queue, and a button that breaks the fix.</p>
+        <span class="meta"><span class="pill amber">★ the bench</span></span>
+      </a>
+      <a class="course-card" href="courses/05-when-it-fails.html" style="--diff:#FB923C">
+        <span class="cicon">🧯</span>
+        <span class="cnum">Session 5 · applied</span>
+        <h3>When a step fails</h3>
+        <p>Retries with backoff and jitter, idempotency keys and what to do when the app has none, a dead-letter list you will actually read, and an alert that names the order. Built in n8n, mapped to Zapier and Make.</p>
+        <span class="meta"><span class="pill">build the rungs</span></span>
+      </a>
+      <a class="course-card" href="courses/06-leave-it-running.html" style="--diff:#FB923C">
+        <span class="cicon">🗂️</span>
+        <span class="cnum">Session 6 · applied</span>
+        <h3>Leave it running</h3>
+        <p>An owner, a runbook, an inventory and a review date for every automation. The state that silently resets, the key windows that expire, and how to retire an automation before it retires you.</p>
+        <span class="meta"><span class="pill amber">🔒 final checklist</span></span>
+      </a>
+    </div>
+
+    <div class="diff-legend">
+      <span><i style="background:#34D399"></i>foundations</span>
+      <span><i style="background:#FBBF24"></i>core</span>
+      <span><i style="background:#FB923C"></i>applied</span>
+      <span><i style="background:#F87171"></i>bench night</span>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="paths" style="margin-top:0">
+      <h2>Your passport 🎫</h2>
+      <p class="plede">Clear all three quiz questions in a session and it gets stamped. Six stamps means you can decide what to automate, build it on the tool whose billing fits, and keep it from texting anyone twice. Stamps live in this browser only.</p>
+    </div>
+    <div class="pp-strip"></div>
+  </section>
+
+  <section class="section">
+    <div class="not-this">
+      <h3>What this is not, so you land in the right place 🧭</h3>
+      <table class="clean">
+        <tr><th>If your question is</th><th>Go here instead</th></tr>
+        <tr><td>How do I schedule data pipelines as DAGs in Airflow, with retries and backfills?</td><td><a href="https://phoebefu6.github.io/learn-data-orchestration-with-phoebe/">Data Orchestration ↗</a></td></tr>
+        <tr><td>How do I set SLOs, error budgets and on-call for a data platform?</td><td><a href="https://phoebefu6.github.io/learn-data-reliability-with-phoebe/">Data Reliability ↗</a></td></tr>
+        <tr><td>How do I put an LLM to work drafting replies and triaging my inbox?</td><td><a href="https://phoebefu6.github.io/learn-ai-productivity-with-phoebe/">AI-Powered Productivity ↗</a></td></tr>
+        <tr><td>How do I automate and schedule tasks inside WorkBuddy?</td><td><a href="https://phoebefu6.github.io/learn-workbuddy-with-phoebe/courses/b8-automation.html">WorkBuddy, builder session 8 ↗</a></td></tr>
+        <tr><td>When should a model choose the steps instead of me?</td><td><a href="https://phoebefu6.github.io/learn-ai-agents-with-phoebe/">AI Agents ↗</a></td></tr>
+        <tr><td><strong>I repeat a task every week, I want a no-code workflow to do it, and I do not want it to break or double-send.</strong></td><td><strong>you are in the right place</strong></td></tr>
+      </table>
+      <p style="margin-top:.7rem;font-size:.86rem;color:var(--muted)"><strong>Workflows with fixed steps, built to survive failure.</strong> What to automate, how data moves, what it costs, and the retry, key and queue that make it safe to leave alone.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="paths">
+      <h2>Choose your path 🗺️</h2>
+      <p class="plede">Three doors into the same conviction: an automation is finished when it fails safely, not when it first runs green.</p>
+      <div class="path"><b>⏱️ I just want my week back</b>
+        <a class="pstep" href="courses/01-worth-automating.html">1</a><span class="parr">→</span>
+        <a class="pstep" href="courses/02-triggers-and-actions.html">2</a><span class="parr">→</span>
+        <a class="pstep" href="courses/06-leave-it-running.html">6</a>
+        <span style="font-size:.82rem;color:var(--muted)">pick the task, wire it up, give it an owner and a review date</span>
+      </div>
+      <div class="path"><b>💳 I am choosing a tool for my team</b>
+        <a class="pstep" href="courses/03-zapier-make-n8n.html">3</a><span class="parr">→</span>
+        <a class="pstep" href="courses/04-the-workflow-bench.html">4</a>
+        <span style="font-size:.82rem;color:var(--muted)">what each tool bills, then the same day priced three ways on the bench</span>
+      </div>
+      <div class="path"><b>🎯 The whole build</b>
+        <a class="pstep" href="courses/01-worth-automating.html">1</a><span class="parr">→</span>
+        <a class="pstep" href="courses/02-triggers-and-actions.html">2</a><span class="parr">→</span>
+        <a class="pstep" href="courses/03-zapier-make-n8n.html">3</a><span class="parr">→</span>
+        <a class="pstep" href="courses/04-the-workflow-bench.html">4</a><span class="parr">→</span>
+        <a class="pstep" href="courses/05-when-it-fails.html">5</a><span class="parr">→</span>
+        <a class="pstep" href="courses/06-leave-it-running.html">6</a>
+        <span style="font-size:.82rem;color:var(--muted)">from a boring task to a workflow with a key, a queue, an alert and an owner</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="paths" style="margin-top:0">
+      <h2>What is honest here 🧾</h2>
+      <p class="plede">The bench executes real workflow JSON; the day it runs on is invented and says so. Prices are read from each vendor's page on a stated date and move often.</p>
+    </div>
+    <table class="clean">
+      <tr><th>Claim</th><th>Status</th></tr>
+      <tr><td>Texts sent, duplicates, losses, runs and units on the bench</td><td><strong>Really computed</strong> in your browser by executing n8n-format workflow JSON; an independent Python run gives the same counts for every setting</td></tr>
+      <tr><td>The bench runner behaves like n8n</td><td><strong>Checked on real n8n 2.41.6:</strong> the same workflows, run on six events that hit every failure path, matched the bench on all 24 runs</td></tr>
+      <tr><td>The day of 600 events and its failure mix</td><td><strong>Invented,</strong> seeded and printed on the widget; only the mechanisms transfer to your systems</td></tr>
+      <tr><td>Zapier, Make and n8n prices and billing units</td><td><strong>Read from each vendor's pricing and help pages on 5 October 2026.</strong> Prices change; re-verify before you buy</td></tr>
+      <tr><td>Whether Make bills a failed module run</td><td><strong>Not stated</strong> in the pages read; the bench assumes it does and says so</td></tr>
+      <tr><td>n8n's retry limits</td><td><strong>Read in n8n's engine source</strong> (2 to 5 tries, at most 5 seconds apart)</td></tr>
+    </table>
+  </section>
+
+  <section class="section mm-section">
+    <h2>The knowledge map 🧠</h2>
+    <p class="mm-lede">The whole build at a glance - hover a session to spotlight its concepts, click any node to jump in.</p>
+    <div class="mm-wrap"><div id="mindmap"></div></div>
+  </section>
+
+  <footer class="pagefoot">
+    <span>learn-automation-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span>Neighbours on the shelf: <a href="https://phoebefu6.github.io/learn-pkm-with-phoebe/">PKM ↗</a> &nbsp;·&nbsp; <a href="https://phoebefu6.github.io/learn-ai-productivity-with-phoebe/">AI-Powered Productivity ↗</a> &nbsp;·&nbsp; <a href="https://phoebefu6.github.io/learn-data-orchestration-with-phoebe/">Data Orchestration ↗</a></span>
+  </footer>
+
+</main>
+
+<script>
+window.MINDMAP_DATA = {
+ "title": "Life & Work\nAutomation",
+ "centerColor": "#0A4A92",
+ "sessions": [
+  {
+   "label": "Is it worth\nthe time?",
+   "href": "courses/01-worth-automating.html",
+   "color": "#34D399",
+   "concepts": [
+    {
+     "label": "The break-even line",
+     "href": "courses/01-worth-automating.html"
+    },
+    {
+     "label": "What charts leave out",
+     "href": "courses/01-worth-automating.html"
+    },
+    {
+     "label": "Which task goes first",
+     "href": "courses/01-worth-automating.html"
+    }
+   ]
+  },
+  {
+   "label": "Triggers, actions\nand the data",
+   "href": "courses/02-triggers-and-actions.html",
+   "color": "#FBBF24",
+   "concepts": [
+    {
+     "label": "Instant or polling",
+     "href": "courses/02-triggers-and-actions.html"
+    },
+    {
+     "label": "Items, bundles, fields",
+     "href": "courses/02-triggers-and-actions.html"
+    },
+    {
+     "label": "One step reads another",
+     "href": "courses/02-triggers-and-actions.html"
+    }
+   ]
+  },
+  {
+   "label": "Zapier, Make\nor n8n",
+   "href": "courses/03-zapier-make-n8n.html",
+   "color": "#FBBF24",
+   "concepts": [
+    {
+     "label": "Task, credit, execution",
+     "href": "courses/03-zapier-make-n8n.html"
+    },
+    {
+     "label": "Self-host or cloud",
+     "href": "courses/03-zapier-make-n8n.html"
+    },
+    {
+     "label": "One flow, three bills",
+     "href": "courses/03-zapier-make-n8n.html"
+    }
+   ]
+  },
+  {
+   "label": "The workflow\nbench",
+   "href": "courses/04-the-workflow-bench.html",
+   "color": "#F87171",
+   "concepts": [
+    {
+     "label": "Red is not lost",
+     "href": "courses/04-the-workflow-bench.html"
+    },
+    {
+     "label": "Retry everything doubles",
+     "href": "courses/04-the-workflow-bench.html"
+    },
+    {
+     "label": "Store off, key useless",
+     "href": "courses/04-the-workflow-bench.html"
+    }
+   ]
+  },
+  {
+   "label": "When a step\nfails",
+   "href": "courses/05-when-it-fails.html",
+   "color": "#FB923C",
+   "concepts": [
+    {
+     "label": "Backoff with jitter",
+     "href": "courses/05-when-it-fails.html"
+    },
+    {
+     "label": "Keys without app support",
+     "href": "courses/05-when-it-fails.html"
+    },
+    {
+     "label": "Dead letters and alerts",
+     "href": "courses/05-when-it-fails.html"
+    }
+   ]
+  },
+  {
+   "label": "Leave it\nrunning",
+   "href": "courses/06-leave-it-running.html",
+   "color": "#FB923C",
+   "concepts": [
+    {
+     "label": "Owner and runbook",
+     "href": "courses/06-leave-it-running.html"
+    },
+    {
+     "label": "The inventory",
+     "href": "courses/06-leave-it-running.html"
+    },
+    {
+     "label": "Review, expire, retire",
+     "href": "courses/06-leave-it-running.html"
+    }
+   ]
+  }
+ ]
+};
+</script>
+<script src="assets/mindmap.js?v=1"></script>
+<script src="assets/app.js?v=1"></script>
+</body>
+</html>

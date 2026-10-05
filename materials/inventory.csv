@@ -1,0 +1,6 @@
+name,tool,owner,trigger,side_effect,idempotency,dead_letter,alert_to,runbook,last_review,review_every_days,units_month
+Order SMS,n8n,Mei,webhook,sends SMS,event_id key,yes,ops channel,runbooks/order-sms.md,2026-09-15,90,18400
+Leads into CRM,Zapier,Arjun,form submit,creates contact,email lookup,no,Arjun email,,2026-03-02,90,2100
+Invoice filing,Make,,new file,moves file,file id,no,,,2025-11-20,180,3900
+Monday status email,Zapier,Mei,schedule,sends email,none,no,Mei email,runbooks/status-email.md,2026-08-28,180,8
+Weekly sales number,n8n,Arjun,schedule,posts message,none,no,ops channel,,2026-07-01,90,4

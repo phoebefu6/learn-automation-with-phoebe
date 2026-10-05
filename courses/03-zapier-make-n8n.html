@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Session 3 of 6. What Zapier, Make and n8n actually bill: a task, a credit and an execution are three different meters on the same workflow. The plan tables as read on 5 October 2026, the per-unit comparison device and its limits, and what self-hosting n8n under the Sustainable Use License really asks of you.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="Zapier, Make or n8n - learn automation with phoebe">
+<meta property="og:description" content="Session 3 of 6. Three billing units, one workflow, dated price tables, and who runs the box.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-automation-with-phoebe/courses/03-zapier-make-n8n.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Zapier, Make or n8n - learn automation with phoebe">
+<meta name="twitter:description" content="Session 3 of 6. A task, a credit and an execution are not the same size of work.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Session 3 · Zapier, Make or n8n - learn automation with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-automation-with-phoebe</a> / Session 3 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn Automation with Phoebe · Session 3 of 6</div>
+    <h1>Zapier, Make or <span class="accent">n8n</span></h1>
+    <p class="sub">The three tools look alike on a demo: boxes, arrows, a green tick. They stop looking alike on the invoice, because each one counts a different thing. Zapier counts successful actions, Make counts every module that runs, and n8n counts whole runs. Put the same five-step workflow on all three and you get 2, 4 and 1 units for one order. Tonight we read what each meter ticks on, put the plan tables side by side with a date on every number, price the bench workflow at three volumes, and ask the question that decides more than price: who runs the server, and under what licence.</p>
+    <div class="chip-row">
+      <span class="chip level">🟡 Core</span>
+      <span class="chip audience">Anyone choosing a tool</span>
+      <span class="chip audience">Prices read 5 October 2026</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:4">3-20 · Three meters, three price tables, one licence</span>
+      <span class="a3" style="flex:5">20-42 · Build-along: price your own candidate</span>
+      <span class="a4" style="flex:1">42-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where we start</h2>
+    </div>
+    <p class="lede">You arrive with one sentence from session 1 and one workflow from session 2: when an order comes in, look the customer up and text them. Before you build it for real, you have to pick where it lives. The usual way to choose is to compare monthly prices, and that comparison is nearly meaningless until you know what one unit of each price buys. A task, a credit and an execution are not three names for the same thing. Count your workflow in each unit first, then read the price.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">★ Build-along = run it yourself</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> Your own candidate workflow counted in tasks, credits and executions, with the free steps taken out; a price for it on each tool with a date next to every number you used; the bench workflow priced at 500, 3,000 and 18,000 runs a month against the entry plans; and one sentence naming the tool you would pick and why, in terms of billing shape, volume and who runs the server.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers what each tool bills</span>
+      <h2>Three meters on one workflow</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">Take the bench workflow: a webhook receives an order, an IF lets only orders through, a Set step shapes the message, one HTTP call looks up the customer and a second sends the SMS. Run it once on each tool and watch where the meter ticks. Zapier ticks on the two calls that reach another server, and only if they succeed. Make ticks on every module that runs, trigger included. n8n ticks once for the whole run. Same order, same five steps, three different counts.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 372" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The bench workflow drawn three times, once per tool, as five boxes: Order webhook, Is it an order, Shape message, Look up, Send the SMS. On Zapier only the two HTTP actions carry a billing tick, one task each, and only when they succeed; trigger, Filter and Formatter are free: 2 tasks a run. On Make the trigger, the Set module and both HTTP modules each carry a tick, one credit each, and the filter on the route is free: 4 credits a run. On n8n one bracket around all five nodes carries a single tick: 1 execution for the whole run.">
+        <defs>
+          <filter id="s3aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="61" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s3aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s3aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s3aH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s3aL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s3aS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s3aB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s3aN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s3aH" x="24" y="26">ONE WORKFLOW, THREE METERS</text>
+        <text class="s3aS" x="250" y="26">the bench's five steps, one order; a rust tick marks each step that bills on that tool</text>
+
+        <g filter="url(#s3aSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- meter doodle -->
+          <circle cx="846" cy="22" r="12" fill="#FFFFFF"/>
+          <path d="M846 22 L853 14" stroke="#B5480C"/>
+
+          <!-- Zapier lane -->
+          <rect x="160" y="60" width="124" height="46" rx="9" transform="rotate(-0.6 222 83)" fill="#EBF3FD"/>
+          <rect x="302" y="60" width="124" height="46" rx="9" transform="rotate(0.5 364 83)" fill="#FFFFFF"/>
+          <rect x="444" y="60" width="124" height="46" rx="9" transform="rotate(-0.4 506 83)" fill="#FFFFFF"/>
+          <rect x="586" y="60" width="124" height="46" rx="9" transform="rotate(0.6 648 83)" fill="#FFFFFF"/>
+          <rect x="728" y="60" width="124" height="46" rx="9" transform="rotate(-0.5 790 83)" fill="#FFFFFF"/>
+          <path d="M286 83 L298 83" marker-end="url(#s3aAr)"/>
+          <path d="M428 83 L440 83" marker-end="url(#s3aAr)"/>
+          <path d="M570 83 L582 83" marker-end="url(#s3aAr)"/>
+          <path d="M712 83 L724 83" marker-end="url(#s3aAr)"/>
+          <circle cx="702" cy="62" r="9" fill="#B5480C" stroke="#B5480C"/>
+          <path d="M697 62 L701 66 L707 57" stroke="#FFFFFF" stroke-width="2"/>
+          <circle cx="844" cy="62" r="9" fill="#B5480C" stroke="#B5480C"/>
+          <path d="M839 62 L843 66 L849 57" stroke="#FFFFFF" stroke-width="2"/>
+
+          <!-- Make lane -->
+          <rect x="160" y="160" width="124" height="46" rx="9" transform="rotate(0.5 222 183)" fill="#EBF3FD"/>
+          <rect x="302" y="160" width="124" height="46" rx="9" transform="rotate(-0.6 364 183)" fill="#FFFFFF"/>
+          <rect x="444" y="160" width="124" height="46" rx="9" transform="rotate(0.4 506 183)" fill="#FFFFFF"/>
+          <rect x="586" y="160" width="124" height="46" rx="9" transform="rotate(-0.5 648 183)" fill="#FFFFFF"/>
+          <rect x="728" y="160" width="124" height="46" rx="9" transform="rotate(0.6 790 183)" fill="#FFFFFF"/>
+          <path d="M286 183 L298 183" marker-end="url(#s3aAr)"/>
+          <path d="M428 183 L440 183" marker-end="url(#s3aAr)"/>
+          <path d="M570 183 L582 183" marker-end="url(#s3aAr)"/>
+          <path d="M712 183 L724 183" marker-end="url(#s3aAr)"/>
+          <circle cx="276" cy="162" r="9" fill="#B5480C" stroke="#B5480C"/>
+          <path d="M271 162 L275 166 L281 157" stroke="#FFFFFF" stroke-width="2"/>
+          <circle cx="560" cy="162" r="9" fill="#B5480C" stroke="#B5480C"/>
+          <path d="M555 162 L559 166 L565 157" stroke="#FFFFFF" stroke-width="2"/>
+          <circle cx="702" cy="162" r="9" fill="#B5480C" stroke="#B5480C"/>
+          <path d="M697 162 L701 166 L707 157" stroke="#FFFFFF" stroke-width="2"/>
+          <circle cx="844" cy="162" r="9" fill="#B5480C" stroke="#B5480C"/>
+          <path d="M839 162 L843 166 L849 157" stroke="#FFFFFF" stroke-width="2"/>
+
+          <!-- n8n lane: one bracket around the whole run -->
+          <rect x="148" y="250" width="716" height="66" rx="14" transform="rotate(0.2 506 283)" fill="url(#s3aHc)" stroke="#0A4A92"/>
+          <rect x="160" y="260" width="124" height="46" rx="9" transform="rotate(-0.5 222 283)" fill="#EBF3FD"/>
+          <rect x="302" y="260" width="124" height="46" rx="9" transform="rotate(0.4 364 283)" fill="#FFFFFF"/>
+          <rect x="444" y="260" width="124" height="46" rx="9" transform="rotate(-0.6 506 283)" fill="#FFFFFF"/>
+          <rect x="586" y="260" width="124" height="46" rx="9" transform="rotate(0.5 648 283)" fill="#FFFFFF"/>
+          <rect x="728" y="260" width="124" height="46" rx="9" transform="rotate(-0.4 790 283)" fill="#FFFFFF"/>
+          <path d="M286 283 L298 283" marker-end="url(#s3aAr)"/>
+          <path d="M428 283 L440 283" marker-end="url(#s3aAr)"/>
+          <path d="M570 283 L582 283" marker-end="url(#s3aAr)"/>
+          <path d="M712 283 L724 283" marker-end="url(#s3aAr)"/>
+          <circle cx="858" cy="252" r="10" fill="#B5480C" stroke="#B5480C"/>
+          <path d="M853 252 L857 256 L863 247" stroke="#FFFFFF" stroke-width="2"/>
+        </g>
+
+        <!-- lane titles -->
+        <text class="s3aH" x="24" y="75">ZAPIER</text>
+        <text class="s3aB" x="24" y="91">2 tasks a run</text>
+        <text class="s3aS" x="24" y="107">only if both succeed</text>
+        <text class="s3aH" x="24" y="175">MAKE</text>
+        <text class="s3aB" x="24" y="191">4 credits a run</text>
+        <text class="s3aS" x="24" y="207">the filter is free</text>
+        <text class="s3aH" x="24" y="275">n8n</text>
+        <text class="s3aB" x="24" y="291">1 execution a run</text>
+        <text class="s3aS" x="24" y="307">however many nodes</text>
+
+        <!-- Zapier node labels -->
+        <text class="s3aL" x="170" y="80">Order webhook</text>
+        <text class="s3aS" x="170" y="96">trigger</text>
+        <text class="s3aL" x="312" y="80">Is it an order</text>
+        <text class="s3aS" x="312" y="96">Filter step</text>
+        <text class="s3aL" x="454" y="80">Shape message</text>
+        <text class="s3aS" x="454" y="96">Formatter step</text>
+        <text class="s3aL" x="596" y="80">Look up</text>
+        <text class="s3aS" x="596" y="96">action</text>
+        <text class="s3aL" x="738" y="80">Send the SMS</text>
+        <text class="s3aS" x="738" y="96">action</text>
+        <text class="s3aS" x="170" y="124">free</text>
+        <text class="s3aS" x="312" y="124">free</text>
+        <text class="s3aS" x="454" y="124">free</text>
+        <text class="s3aB" x="596" y="124">1 task</text>
+        <text class="s3aB" x="738" y="124">1 task</text>
+
+        <!-- Make node labels -->
+        <text class="s3aL" x="170" y="180">Order webhook</text>
+        <text class="s3aS" x="170" y="196">trigger module</text>
+        <text class="s3aL" x="312" y="180">Is it an order</text>
+        <text class="s3aS" x="312" y="196">filter on route</text>
+        <text class="s3aL" x="454" y="180">Shape message</text>
+        <text class="s3aS" x="454" y="196">tools module</text>
+        <text class="s3aL" x="596" y="180">Look up</text>
+        <text class="s3aS" x="596" y="196">HTTP module</text>
+        <text class="s3aL" x="738" y="180">Send the SMS</text>
+        <text class="s3aS" x="738" y="196">HTTP module</text>
+        <text class="s3aB" x="170" y="224">1 credit</text>
+        <text class="s3aS" x="312" y="224">free</text>
+        <text class="s3aB" x="454" y="224">1 credit</text>
+        <text class="s3aB" x="596" y="224">1 credit</text>
+        <text class="s3aB" x="738" y="224">1 credit</text>
+
+        <!-- n8n node labels -->
+        <text class="s3aL" x="170" y="280">Order webhook</text>
+        <text class="s3aS" x="170" y="296">Webhook node</text>
+        <text class="s3aL" x="312" y="280">Is it an order</text>
+        <text class="s3aS" x="312" y="296">IF node</text>
+        <text class="s3aL" x="454" y="280">Shape message</text>
+        <text class="s3aS" x="454" y="296">Set node</text>
+        <text class="s3aL" x="596" y="280">Look up</text>
+        <text class="s3aS" x="596" y="296">HTTP Request</text>
+        <text class="s3aL" x="738" y="280">Send the SMS</text>
+        <text class="s3aS" x="738" y="296">HTTP Request</text>
+        <text class="s3aB" x="160" y="334">1 execution for the whole run, counted only for production runs, not editor tests</text>
+
+        <text class="s3aN" x="24" y="358">Same order, same five steps: 2 tasks, 4 credits or 1 execution. Three meters, not three prices.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - count the rust ticks before you read any price: the unit decides what "cheap" means</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span>Three units, one workflow<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>Zapier bills a task.</strong> In Zapier's own words, "A task is any successful action that runs in Zapier. Only successful actions count." The trigger is free, and so are the built-in helper steps: Filter, Paths, Formatter, Delay, Looping, Digest and Storage. On the bench workflow that leaves the two HTTP calls, so a successful order costs <strong>2 tasks</strong>. A signup that the Filter stops costs nothing beyond the free trigger.</p>
+        <p><strong>Make bills a credit.</strong> Since 27 August, credits are Make's billing unit; before that the same thing was called an operation, defined as a single module run to process data or check for new data. For ordinary non-AI apps, one module run is one credit, and the trigger module counts too. Routers and error-handler modules are free, and a filter sits on the route between modules rather than being a module itself. On the bench workflow that is trigger, Set and two HTTP modules: <strong>4 credits</strong> an order.</p>
+        <p><strong>n8n bills an execution.</strong> n8n's docs: "An execution is a single run of your entire workflow. It doesn't matter how many steps are in the workflow or how much data it processes." Five nodes or fifty, the order costs <strong>1 execution</strong>. Only production executions count; runs you start by hand in the editor while building do not.</p>
+        <p>So the honest first question is never "which is cheapest?" but "how many of each unit does my workflow burn per run?" The answer depends on the shape of your workflow: many steps per run favours a per-run meter, few steps on a per-step meter can still be cheap.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>The fine print that changes the count<span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>Failed steps.</strong> On Zapier, "All action steps that error or halt" are free (Zapier Help, "How is task usage measured in Zapier", updated 2026-08-21). So a send that errors costs nothing, and the retry that succeeds costs one task. On Make, the pages read for this session do not say whether a module run that fails uses a credit. The bench in session 4 assumes it does and says so on the widget; treat that as an assumption, not a fact, until Make documents it.</p>
+        <p><strong>Replays.</strong> Zapier's Autoreplay replays the errored step (Professional plans and above). A <em>full</em> replay of a run is different: it re-counts the steps that had already succeeded the first time. Replay the step, not the run, when you can. Zapier's page does not state the Autoreplay schedule; do not assume one.</p>
+        <p><strong>AI modules.</strong> On Make, some AI modules use 2 or 10 credits per run instead of 1 (Make Help, "Credits"). One AI step can cost as much as ten plain steps. Check the module before you count it as 1.</p>
+        <p><strong>Checks with nothing in them.</strong> Make counts a polling trigger check once even when it finds no new data. A trigger that checks every few minutes all day costs credits on a quiet day. A webhook trigger, which session 2 used, only runs when something arrives.</p>
+        <p><strong>Manual runs.</strong> n8n does not count runs you start from the editor. That makes building and testing free on the meter, and it also means the number you see while building is not the number you will see in production.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>The replay that charged twice.</strong> Zapier documents that a full replay re-counts every previously successful step. A common pattern: a five-action Zap fails on its last step, someone replays the whole run from the history page to be safe, and the four actions that had already worked run and bill again. Worse than the tasks, those four actions <em>do their work</em> again: a second CRM record, a second email. The meter and the side effect move together, which is the subject of session 5.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers the plan tables, dated</span>
+      <h2>The plan tables, with a date on every number</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">A pricing page is a live document that changes without telling you. Every number below was read on the vendors' own pages on 5 October 2026, and every one should be re-verified before you buy. Make and n8n display a single figure per plan with a monthly or annual toggle that could not be confirmed from the page read, so their prices are "as displayed". Read the units column before the price column.</p>
+
+    <table class="clean">
+      <tr><th>Tool and plan</th><th>Price, read 5 October 2026</th><th>Included a month</th><th>Notes</th></tr>
+      <tr><td>Zapier Free</td><td>$0</td><td>100 tasks</td><td></td></tr>
+      <tr><td>Zapier Professional</td><td>$29.99 billed monthly, $19.99 a month billed annually</td><td>750 tasks</td><td>Pay-per-task overage when enabled: 2.5x the base rate on monthly, 1.25x on annual</td></tr>
+      <tr><td>Zapier Team</td><td>$103.50 billed monthly, $69 a month billed annually</td><td>2,000 tasks</td><td>Same overage rule</td></tr>
+      <tr><td>Make Free</td><td>$0</td><td>1,000 credits</td><td></td></tr>
+      <tr><td>Make Core</td><td>$9 a month, as displayed</td><td>10,000 credits</td><td>"Save 15% or more" annually</td></tr>
+      <tr><td>Make Pro</td><td>$16 a month, as displayed</td><td>10,000 credits</td><td></td></tr>
+      <tr><td>Make Teams</td><td>$29 a month, as displayed</td><td>10,000 credits</td><td></td></tr>
+      <tr><td>n8n Starter</td><td>€20 a month, as displayed</td><td>2,500 executions</td><td>"17%" annual saving shown</td></tr>
+      <tr><td>n8n Pro</td><td>€50 a month, as displayed</td><td>10,000 executions</td><td></td></tr>
+      <tr><td>n8n Business</td><td>€667 a month, as displayed, self-hosted</td><td>40,000 executions</td><td></td></tr>
+    </table>
+    <p class="mono">All prices read 5 October 2026 on zapier.com/pricing, make.com/en/pricing and n8n.io/pricing. Re-verify before you buy: plans, tiers and units change.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two groups of hand-drawn bars. Price of one unit, plan price divided by included units: Zapier $0.0400 a task from $29.99 over 750, Make $0.0009 a credit from $9 over 10,000, n8n 0.0080 euro an execution from 20 euro over 2,500. What one bench run costs at rung 1, mapped: Zapier $0.0414 from 621 tasks over 600 runs, Make $0.0024 from 1,616 credits over 600 runs, n8n 0.0080 euro from 600 executions over 600 runs. The n8n bar does not move because one execution is the whole run. A side note says a task is one action, a credit one module run, an execution one whole run.">
+        <defs>
+          <filter id="s3bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="67" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s3bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s3bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s3bH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s3bL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s3bS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s3bB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s3bV { font: 800 16px Inter, sans-serif; fill: #0A4A92; }
+          .s3bA { font: 700 11px Inter, sans-serif; fill: #0A64C4; letter-spacing: .04em; }
+          .s3bN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s3bH" x="24" y="26">THE PER-UNIT DEVICE</text>
+        <text class="s3bS" x="180" y="26">plan price / included units, read 5 October 2026 · constructed for comparison, not a quote</text>
+
+        <g filter="url(#s3bSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- baseline -->
+          <path d="M226 64 L226 162" stroke="#4D5D74"/>
+          <path d="M226 202 L226 300" stroke="#4D5D74"/>
+          <!-- per unit bars -->
+          <rect x="228" y="70" width="400" height="18" rx="4" transform="rotate(-0.3 428 79)" fill="#EBF3FD"/>
+          <rect x="228" y="104" width="9" height="18" rx="2" fill="#EBF3FD"/>
+          <rect x="228" y="138" width="80" height="18" rx="4" transform="rotate(0.4 268 147)" fill="#EBF3FD"/>
+          <!-- per run bars -->
+          <rect x="228" y="208" width="414" height="18" rx="4" transform="rotate(0.3 435 217)" fill="url(#s3bHc)"/>
+          <rect x="228" y="242" width="24" height="18" rx="3" fill="url(#s3bHc)"/>
+          <rect x="228" y="276" width="80" height="18" rx="4" transform="rotate(-0.4 268 285)" fill="#FDEEE4" stroke="#B5480C"/>
+          <!-- side note card -->
+          <rect x="712" y="56" width="148" height="92" rx="8" transform="rotate(0.8 786 102)" fill="#FFFFFF"/>
+        </g>
+
+        <text class="s3bA" x="24" y="56">PRICE OF ONE UNIT</text>
+        <text class="s3bL" x="24" y="83">Zapier, one task</text>
+        <text class="s3bS" x="24" y="97">$29.99 / 750</text>
+        <text class="s3bL" x="638" y="84">$0.0400</text>
+        <text class="s3bL" x="24" y="117">Make, one credit</text>
+        <text class="s3bS" x="24" y="131">$9 / 10,000</text>
+        <text class="s3bL" x="248" y="118">$0.0009</text>
+        <text class="s3bL" x="24" y="151">n8n, one execution</text>
+        <text class="s3bS" x="24" y="165">€20 / 2,500</text>
+        <text class="s3bL" x="318" y="152">€0.0080</text>
+
+        <text class="s3bH" x="724" y="78">NOT THE SAME SIZE</text>
+        <text class="s3bS" x="724" y="98">a task: one action</text>
+        <text class="s3bS" x="724" y="116">a credit: one module</text>
+        <text class="s3bS" x="724" y="134">an execution: one run</text>
+
+        <text class="s3bA" x="24" y="194">WHAT ONE BENCH RUN COSTS, RUNG 1, MAPPED</text>
+        <text class="s3bL" x="24" y="221">Zapier</text>
+        <text class="s3bS" x="24" y="235">621 tasks / 600 runs</text>
+        <text class="s3bL" x="652" y="222">$0.0414</text>
+        <text class="s3bL" x="24" y="255">Make</text>
+        <text class="s3bS" x="24" y="269">1,616 credits / 600 runs</text>
+        <text class="s3bL" x="262" y="256">$0.0024</text>
+        <text class="s3bL" x="24" y="289">n8n</text>
+        <text class="s3bS" x="24" y="303">600 executions / 600 runs</text>
+        <text class="s3bL" x="318" y="290">€0.0080</text>
+        <text class="s3bB" x="400" y="290">same bar as above: one execution is the whole run</text>
+
+        <text class="s3bN" x="24" y="328">Real bills are tiered plans, not unit prices. USD and EUR are not converted. Re-verify before you buy.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - per unit, Zapier looks 44 times Make; per bench run it is about 17 times, because the units are not the same size</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>Reading a pricing page without being sold to<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>Find the unit before the price.</strong> The big number on the card is a plan price. The small number under it, 750 tasks or 10,000 credits or 2,500 executions, is what decides your bill. Write both down together, always.</p>
+        <p><strong>Find the toggle.</strong> Zapier shows two prices for the same plan: $29.99 billed monthly, $19.99 a month billed annually. Make and n8n show one figure and an annual saving ("Save 15% or more", "17%"). Until you have clicked the toggle yourself, you do not know which one you are looking at, which is why those two are "as displayed" here.</p>
+        <p><strong>Find the overage rule.</strong> What happens at unit 751? On Zapier, pay-per-task overage when enabled is charged at 2.5x the base rate on monthly self-serve plans and 1.25x on annual. An automation that grows quietly past its plan is billed at the expensive end.</p>
+        <p><strong>Find what is free.</strong> Free trigger, free filter, free error handler, free manual runs: these change your count more than a few dollars on the plan price. Part 1 lists them per tool.</p>
+        <p><strong>Write the date.</strong> Make renamed its unit on 27 August. A screenshot from September and one from today may not describe the same product.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>Why the per-unit number is a comparison device, not a quote<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Dividing the entry plan's price by its included units gives a tidy number: <strong>$0.0400 a task</strong> on Zapier ($29.99 / 750), <strong>$0.0009 a credit</strong> on Make ($9 / 10,000), <strong>€0.0080 an execution</strong> on n8n (€20 / 2,500). The bench in session 4 uses exactly these to put a money figure next to its unit counts, and labels it "mapped". It is useful for one thing: seeing how the same workflow scales on three meters.</p>
+        <p>It is wrong as a bill in four ways. Plans are bought in tiers, so a month that uses 760 tasks does not cost 760 x $0.0400. Overage is charged at a different rate. USD and EUR are not converted, and tax is left out. And the three units are different sizes of work: the bench's rung 1 day burns 621 tasks, 1,616 credits or 600 executions for the same 600 runs. The bench's rung 4 burns 714 Zapier tasks a day, about 21,000 a month, against a 750-task Professional plan; nobody pays 21,000 x $0.0400, because nobody would stay on that plan.</p>
+        <p>Use the device to compare shapes, then price the real tier on the real page.</p>
+      </div>
+    </details>
+
+    <div class="tryrow" data-fn="price" data-title="Count your units three ways" data-hint="runs a month, action steps per run" data-seed="3000 2" data-cta="Count it"></div>
+
+    <div class="callout tip">
+      <p><strong>What the calculator assumes.</strong> It counts runs x steps Zapier tasks, runs x (steps + 1) Make credits to include the trigger module, and runs n8n executions. On Zapier, enter only the action steps: Formatter, Filter and the trigger are free. On Make, every module counts, so if your scenario has a Set or tools module, it belongs in the steps too. For the bench workflow the honest inputs differ by tool: <code>3000 2</code> is right for Zapier (6,000 tasks · $239.92) and n8n (3,000 executions · €24.00), but its Make line (9,000 credits · $8.10) misses the Set module; <code>3000 3</code> gives the 12,000 credits the build-along script counts. The money is the per-unit device above, nothing more.</p>
+    </div>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>The unit changed name on a live pricing page.</strong> Make's pricing page FAQ now reads "As of August 27, credits are the billing unit in Make." Until then the same plans were sold in operations. For ordinary apps one operation equals one credit, so most counts did not move. AI modules are where they did: some now use 2 or 10 credits a run. Anyone comparing a saved spreadsheet of "operations" against today's page was comparing two different units without knowing it. Date every number you copy.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers self-host versus cloud and the licence</span>
+      <h2>Who runs the box</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">Zapier and Make are cloud only: they run the servers, you rent the meter. n8n also sells a cloud plan, and on top of that its Community Edition is free to run on your own machine. Free to download is not the same as free to run, and not the same as open source. Two questions decide whether self-hosting is right: does the licence allow what you plan to do, and is there a person who will keep the box patched, backed up and up.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn decision tree titled who runs the box. If the vendor runs it, the outcome is cloud: Zapier, Make or n8n cloud. If you run it, the next question is what it is for. If it is to sell n8n to others as a service, the outcome is to ask n8n for a licence, because the Sustainable Use License does not cover that. If it is your own business, personal or non-commercial use, the next question is who patches it. If someone owns the upkeep, self-host n8n Community Edition in Docker with backups. If nobody does, pay for a cloud plan.">
+        <defs>
+          <filter id="s3cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="71" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s3cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s3cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s3cH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s3cL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s3cS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s3cB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s3cN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s3cH" x="24" y="26">WHO RUNS THE BOX?</text>
+        <text class="s3cS" x="170" y="26">two questions decide self-hosting: does the licence allow it, and who keeps it alive</text>
+
+        <g filter="url(#s3cSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- server doodle -->
+          <rect x="54" y="74" width="62" height="54" rx="5" transform="rotate(-2 85 101)" fill="url(#s3cHc)"/>
+          <path d="M60 92 L110 92"/>
+          <path d="M60 110 L110 110"/>
+          <circle cx="102" cy="83" r="2" fill="#11233B"/>
+          <circle cx="102" cy="101" r="2" fill="#11233B"/>
+          <path d="M85 130 L85 144" stroke="#4D5D74"/>
+
+          <!-- root -->
+          <rect x="24" y="148" width="142" height="54" rx="10" transform="rotate(-0.6 95 175)" fill="#EBF3FD"/>
+          <!-- question 2 -->
+          <rect x="230" y="206" width="160" height="54" rx="10" transform="rotate(0.5 310 233)" fill="#FFFFFF"/>
+          <!-- question 3 -->
+          <rect x="456" y="140" width="160" height="54" rx="10" transform="rotate(-0.5 536 167)" fill="#FFFFFF"/>
+          <!-- outcomes -->
+          <rect x="670" y="40" width="190" height="48" rx="10" transform="rotate(0.6 765 64)" fill="#FFFFFF"/>
+          <rect x="670" y="108" width="190" height="48" rx="10" transform="rotate(-0.6 765 132)" fill="#FDEEE4" stroke="#B5480C"/>
+          <rect x="670" y="178" width="190" height="48" rx="10" transform="rotate(0.5 765 202)" fill="#FFFFFF"/>
+          <rect x="670" y="252" width="190" height="48" rx="10" transform="rotate(-0.4 765 276)" fill="#FFFFFF"/>
+
+          <!-- arrows -->
+          <path d="M168 160 L664 66" marker-end="url(#s3cAr)"/>
+          <path d="M168 192 L224 226" marker-end="url(#s3cAr)"/>
+          <path d="M392 222 L450 182" marker-end="url(#s3cAr)"/>
+          <path d="M392 248 L664 274" marker-end="url(#s3cAr)"/>
+          <path d="M618 156 L664 134" marker-end="url(#s3cAr)"/>
+          <path d="M618 180 L664 200" marker-end="url(#s3cAr)"/>
+        </g>
+
+        <text class="s3cL" x="36" y="172">Who runs the box?</text>
+        <text class="s3cS" x="36" y="190">and keeps it alive</text>
+
+        <text class="s3cS" x="242" y="226">if you run it</text>
+        <text class="s3cL" x="242" y="244">What is it for?</text>
+
+        <text class="s3cS" x="468" y="160">if own business use</text>
+        <text class="s3cL" x="468" y="178">Who patches it?</text>
+
+        <text class="s3cS" x="682" y="60">if the vendor runs it</text>
+        <text class="s3cL" x="682" y="78">Zapier, Make, n8n cloud</text>
+        <text class="s3cS" x="682" y="128">if someone owns upkeep</text>
+        <text class="s3cB" x="682" y="146">Self-host n8n CE, Docker</text>
+        <text class="s3cS" x="682" y="198">if nobody does</text>
+        <text class="s3cL" x="682" y="216">Pay for a cloud plan</text>
+        <text class="s3cS" x="682" y="272">if you sell it as a service</text>
+        <text class="s3cL" x="682" y="290">Ask n8n for a licence</text>
+
+        <text class="s3cN" x="24" y="324">The licence decides whether you may self-host. The upkeep decides whether you should.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the rust box is the only path where the software is free, and it is the one that hands you the pager</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>What you take on when you self-host<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>A server.</strong> Something has to be switched on all day for a webhook to land. A laptop that sleeps loses orders.</p>
+        <p><strong>Updates.</strong> n8n ships often, and its runtime moves. The current stable on 5 October 2026, n8n 2.41.6, declares that it needs Node 24 or later, while n8n's own install docs still say Node 20.19 to 24.x. When the docs and the package disagree, the package wins at install time. Its startup log also warns: "Running n8n outside a container is deprecated." Plan on Docker.</p>
+        <p><strong>Backups.</strong> Your workflows, credentials and execution history live in n8n's database on your box. If the disk dies, so do they, unless you copied them somewhere else on a schedule and once tried a restore.</p>
+        <p><strong>Your own uptime.</strong> On cloud, an outage is the vendor's incident. Self-hosted, it is yours: at 13:00 on a Tuesday, the person who gets the message is you. Session 6 is about naming that person before the first outage, and the craft of a runbook for it belongs to the <a href="https://phoebefu6.github.io/learn-data-reliability-with-phoebe/courses/b4-runbooks.html">reliability course's runbooks session</a>.</p>
+        <p>None of this is a reason not to self-host. It is the real price of "free", and it belongs in session 1's upkeep line.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>Reading the Sustainable Use License<span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>n8n's Community Edition is published under the <a href="https://github.com/n8n-io/n8n/blob/master/LICENSE.md">Sustainable Use License 1.0</a>. Its central limit: you may use the software "only for your own internal business purposes or for non-commercial or personal use." Running it for your own company's orders, your household, or a hobby project is inside that. Selling n8n itself to other people as a hosted service is outside it, and that is the case where you talk to n8n about a commercial licence before building.</p>
+        <p>Not every file in the repository is under the same terms. Files with <code>.ee.</code> in their name are enterprise features and need an enterprise licence. If a feature you want lives in one of those files, the free edition does not grant it.</p>
+        <p>n8n calls this model "fair-code". The accurate plain description is <strong>source-available with limits</strong>: you can read the code and run it, under conditions. It is not open source in the OSI sense, which does not allow restrictions on field of use. Say "source-available" in a proposal and nobody can correct you; say "open source" and someone eventually will. And as with the prices, read the licence file itself, dated, rather than a summary of it, including this one.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>The docs said Node 20, the package said Node 24.</strong> n8n's install page reads "n8n requires a Node.js version between 20.19 and 24.x, inclusive". On 5 October 2026 the stable npm package, n8n 2.41.6, declared <code>node &gt;=24.0.0</code>, so on Node 22 the current release does not satisfy its own requirement. On Node 24 it started and answered its health check in about six seconds, and printed the container deprecation warning. Nothing was wrong with either page on the day it was written. That is the self-hosting job in miniature: two official sources disagree, and you are the one who has to notice.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Price your candidate and the bench workflow</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">Five steps. You count your own workflow's steps per tool, run a fifteen-line Python script that prices the bench workflow at three volumes, repeat it with your own numbers in the calculator, then open the three pricing pages yourself and put today's date next to every number. The last step is one sentence: the tool, and why.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 312" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A hand-drawn grid from the real output of price_three_ways.py. Rows: 500, 3,000 and 18,000 runs a month. Columns: Zapier Professional with 750 tasks, Make Core with 10,000 credits, n8n Starter with 2,500 executions, n8n Pro with 10,000 executions. At 500 runs: 1,000 tasks over, 2,000 credits fits, 500 executions fits, 500 fits. At 3,000 runs: 6,000 tasks over, 12,000 credits over, 3,000 executions over Starter, 3,000 fits Pro, the only fit in the row. At 18,000 runs every plan is over.">
+        <defs>
+          <filter id="s3dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="79" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s3dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s3dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s3dH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s3dL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s3dS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s3dB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s3dA { font: 700 11px Inter, sans-serif; fill: #0A64C4; }
+          .s3dN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s3dH" x="24" y="26">THE RUNS LADDER AGAINST FOUR ENTRY PLANS</text>
+        <text class="s3dS" x="330" y="26">real output of price_three_ways.py · plans as read 5 October 2026</text>
+
+        <g filter="url(#s3dSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- row 500 -->
+          <rect x="196" y="94" width="156" height="50" rx="8" transform="rotate(-0.4 274 119)" fill="url(#s3dHc)"/>
+          <rect x="362" y="94" width="156" height="50" rx="8" transform="rotate(0.4 440 119)" fill="#FFFFFF"/>
+          <rect x="528" y="94" width="156" height="50" rx="8" transform="rotate(-0.3 606 119)" fill="#FFFFFF"/>
+          <rect x="694" y="94" width="156" height="50" rx="8" transform="rotate(0.5 772 119)" fill="#FFFFFF"/>
+          <!-- row 3,000 -->
+          <rect x="196" y="154" width="156" height="50" rx="8" transform="rotate(0.4 274 179)" fill="url(#s3dHc)"/>
+          <rect x="362" y="154" width="156" height="50" rx="8" transform="rotate(-0.4 440 179)" fill="url(#s3dHc)"/>
+          <rect x="528" y="154" width="156" height="50" rx="8" transform="rotate(0.3 606 179)" fill="url(#s3dHc)"/>
+          <rect x="694" y="154" width="156" height="50" rx="8" transform="rotate(-0.5 772 179)" fill="#FDEEE4" stroke="#B5480C"/>
+          <!-- row 18,000 -->
+          <rect x="196" y="214" width="156" height="50" rx="8" transform="rotate(-0.3 274 239)" fill="url(#s3dHc)"/>
+          <rect x="362" y="214" width="156" height="50" rx="8" transform="rotate(0.5 440 239)" fill="url(#s3dHc)"/>
+          <rect x="528" y="214" width="156" height="50" rx="8" transform="rotate(-0.4 606 239)" fill="url(#s3dHc)"/>
+          <rect x="694" y="214" width="156" height="50" rx="8" transform="rotate(0.3 772 239)" fill="url(#s3dHc)"/>
+        </g>
+
+        <!-- column heads -->
+        <text class="s3dL" x="204" y="62">Zapier Professional</text>
+        <text class="s3dS" x="204" y="78">750 tasks</text>
+        <text class="s3dL" x="370" y="62">Make Core</text>
+        <text class="s3dS" x="370" y="78">10,000 credits</text>
+        <text class="s3dL" x="536" y="62">n8n Starter</text>
+        <text class="s3dS" x="536" y="78">2,500 executions</text>
+        <text class="s3dL" x="702" y="62">n8n Pro</text>
+        <text class="s3dS" x="702" y="78">10,000 executions</text>
+
+        <!-- row heads -->
+        <text class="s3dL" x="24" y="116">500 runs</text>
+        <text class="s3dS" x="24" y="132">a month</text>
+        <text class="s3dL" x="24" y="176">3,000 runs</text>
+        <text class="s3dS" x="24" y="192">a month</text>
+        <text class="s3dL" x="24" y="236">18,000 runs</text>
+        <text class="s3dS" x="24" y="252">about the bench day x 30</text>
+
+        <!-- row 500 cells -->
+        <text class="s3dL" x="208" y="115">1,000 tasks</text>
+        <text class="s3dS" x="208" y="132">over</text>
+        <text class="s3dL" x="374" y="115">2,000 credits</text>
+        <text class="s3dA" x="374" y="132">fits</text>
+        <text class="s3dL" x="540" y="115">500 executions</text>
+        <text class="s3dA" x="540" y="132">fits</text>
+        <text class="s3dL" x="706" y="115">500 executions</text>
+        <text class="s3dA" x="706" y="132">fits</text>
+
+        <!-- row 3,000 cells -->
+        <text class="s3dL" x="208" y="175">6,000 tasks</text>
+        <text class="s3dS" x="208" y="192">over</text>
+        <text class="s3dL" x="374" y="175">12,000 credits</text>
+        <text class="s3dS" x="374" y="192">over</text>
+        <text class="s3dL" x="540" y="175">3,000 executions</text>
+        <text class="s3dS" x="540" y="192">over</text>
+        <text class="s3dL" x="706" y="175">3,000 executions</text>
+        <text class="s3dB" x="706" y="192">fits, the only one</text>
+
+        <!-- row 18,000 cells -->
+        <text class="s3dL" x="208" y="235">36,000 tasks</text>
+        <text class="s3dS" x="208" y="252">over</text>
+        <text class="s3dL" x="374" y="235">72,000 credits</text>
+        <text class="s3dS" x="374" y="252">over</text>
+        <text class="s3dL" x="540" y="235">18,000 executions</text>
+        <text class="s3dS" x="540" y="252">over</text>
+        <text class="s3dL" x="706" y="235">18,000 executions</text>
+        <text class="s3dS" x="706" y="252">over</text>
+
+        <text class="s3dN" x="24" y="290">Hatched means over the entry plan. Same workflow, three meters: 2 tasks, 4 credits or 1 execution a run.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - "over" is not "impossible", it is "the next tier": read the next tier's price on the day you buy</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Count your workflow's steps, per tool.</strong> Take your session 1 candidate (or the bench workflow) and list its steps. Then mark, tool by tool, which ones bill and which are free, using Part 1. The bench workflow comes out like this; do the same for yours.</p>
+        <div class="prompt-box good"><span class="label">★ Step 1 · what bills, per tool</span>step               Zapier          Make               n8n
+Order webhook      trigger, free   trigger, 1 credit  (one execution
+Is it an order     Filter, free    route filter, free  for the whole
+Shape message      Formatter, free module, 1 credit    run, whatever
+Look up customer   1 task          1 credit            the number
+Send the SMS       1 task          1 credit            of nodes)
+per run            2 tasks         4 credits           1 execution</div>
+      </div>
+      <div class="step">
+        <p><strong>Price the bench workflow at three volumes.</strong> Download <a href="../materials/price_three_ways.py">price_three_ways.py</a> and run it with <code>python3 price_three_ways.py</code>. It counts 2 tasks, 4 credits and 1 execution per run at 500, 3,000 and 18,000 runs a month, and checks each against the entry plans read on 5 October 2026. This is the real output:</p>
+        <div class="prompt-box good"><span class="label">★ Step 2 · python3 price_three_ways.py</span>   500 runs:  1,000 tasks,  2,000 credits,    500 executions | Zapier Professional over, Make Core fits, n8n Starter fits, n8n Pro fits
+ 3,000 runs:  6,000 tasks, 12,000 credits,  3,000 executions | Zapier Professional over, Make Core over, n8n Starter over, n8n Pro fits
+18,000 runs: 36,000 tasks, 72,000 credits, 18,000 executions | Zapier Professional over, Make Core over, n8n Starter over, n8n Pro over</div>
+      </div>
+      <div class="step">
+        <p><strong>Run your own numbers in the calculator.</strong> In Part 2's calculator, enter your runs a month and your action steps per run. Remember its assumptions: Zapier counts only the actions you enter, Make adds one for the trigger, n8n counts runs. If your Make scenario has extra modules that Zapier would do for free, run it a second time with those modules added to the steps, and read the Make line from that run. The seeded example prints:</p>
+        <div class="prompt-box good"><span class="label">★ Step 3 · calculator, input 3000 2</span>6,000 · $239.92   Zapier tasks · at $0.0400
+9,000 · $8.10     Make credits · at $0.0009
+3,000 · €24.00    n8n executions · at €0.0080
+Units are counted; the money is plan price divided by included units, read 2026-10-05. Real bills come in tiers. Re-verify before you buy.</div>
+      </div>
+      <div class="step">
+        <p><strong>Open the three pricing pages yourself.</strong> Go to zapier.com/pricing, make.com/en/pricing and n8n.io/pricing. For each plan you are considering, write the price, the included units, which billing period the figure is for (click the toggle), and today's date. Then compare with the 5 October 2026 reading. If anything moved, your reading wins.</p>
+        <div class="prompt-box good"><span class="label">★ Step 4 · your dated reading</span>plan                 price today   units   period    read on     5 Oct 2026 reading
+Zapier Professional  ______        ______  ______    __________  $29.99 monthly / $19.99 annual, 750 tasks
+Make Core            ______        ______  ______    __________  $9 as displayed, 10,000 credits
+n8n Starter          ______        ______  ______    __________  €20 as displayed, 2,500 executions
+
+Overage rule found: ____________________________
+Anything renamed or removed since 5 Oct 2026: ____________________________</div>
+      </div>
+      <div class="step">
+        <p><strong>Pick a tool and write one sentence why.</strong> Name the billing shape (per action, per module, per run), your volume, and who runs the server. One sentence. If your answer is "it depends", say on what.</p>
+        <div class="prompt-box good"><span class="label">★ Step 5 · the sentence</span>Tool: n8n cloud, Pro plan.
+Why: our order SMS is 5 steps at about 3,000 runs a month,
+a per-run meter keeps it at 3,000 executions where per-step
+meters reach 6,000 tasks or 12,000 credits, and nobody here
+wants to patch a server, so not self-hosted.
+Prices read on: __________ (re-verify before buying)</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <p><strong>Keep the dated reading next to the workflow.</strong> In six months the price will have moved, or the unit will have a new name. A dated line lets the next person see whether the decision still holds, instead of redoing it from scratch. Session 6 puts that line into the inventory.</p>
+    </div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 4</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li><strong>Count one real month.</strong> If you already run an automation on any of the three tools, find its usage page and write down last month's units. Compare with what step 1 predicts for its step count and run count. The gap is usually polling checks, replays or test runs.</li>
+      <li><strong>Find the free steps in your candidate.</strong> Rewrite it so the work that is free on your chosen tool (Filter, Formatter, a router, an error handler) does as much as possible, then recount.</li>
+      <li><strong>Read one licence or terms page end to end.</strong> The n8n <a href="https://github.com/n8n-io/n8n/blob/master/LICENSE.md">LICENSE.md</a> if you might self-host, otherwise the usage help page for your chosen tool. Write the date you read it and the one sentence that matters most for you.</li>
+      <li><strong>Bring your session 3 pricing to session 4.</strong> The bench will show what retries and dead-letter redrives add to your unit count on all three tools. Bring your step-5 sentence and see if it survives.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and session 3 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · A Zap has one action, "send the SMS". On one run the action errors, and Autoreplay replays the errored step, which then succeeds. How many tasks did that action use?</p>
+      <button class="qopt" type="button">A · Two: one for the failed attempt, one for the success</button>
+      <button class="qopt" type="button">B · Zero, because the run had an error</button>
+      <button class="qopt" type="button">C · One: action steps that error are free, and only the successful attempt counts; a full replay of the whole run would be different, because it re-counts steps that had already succeeded</button>
+      <button class="qopt" type="button">D · Three, one per retry Zapier makes by default</button>
+      <p class="qwhy">Zapier: "A task is any successful action that runs in Zapier." Action steps that error or halt are free. Replaying the errored step bills the one success. Replaying the full run re-counts earlier successful steps, which is why you replay the step, not the run.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">2 · On the session 4 bench, adding retries raises the Zapier task count and the Make credit count, but n8n's executions stay at 600 for 600 runs until the dead-letter redrives. Why?</p>
+      <button class="qopt" type="button">A · n8n bills one execution per run of the whole workflow, however many steps or node-level retries happen inside it</button>
+      <button class="qopt" type="button">B · n8n does not retry failed steps</button>
+      <button class="qopt" type="button">C · n8n only counts runs started from the editor</button>
+      <button class="qopt" type="button">D · n8n retries are billed to the HTTP provider instead</button>
+      <p class="qwhy">"An execution is a single run of your entire workflow. It doesn't matter how many steps are in the workflow." A retry inside the run is still the same run. The count only rises when a new run starts, as with the 13 redrives on rung 4 (613 executions). And editor runs are the ones that do not count.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">3 · What does n8n's Sustainable Use License allow you to do with the free Community Edition?</p>
+      <button class="qopt" type="button">A · Anything at all, because it is open source in the OSI sense</button>
+      <button class="qopt" type="button">B · Run it only on n8n's own cloud</button>
+      <button class="qopt" type="button">C · Host it and sell access to it as a service to your clients</button>
+      <button class="qopt" type="button">D · Use it for your own internal business purposes, or for non-commercial or personal use; files marked .ee. still need an enterprise licence</button>
+      <p class="qwhy">The licence limits use to "your own internal business purposes or for non-commercial or personal use". Reselling it as a service is outside that. n8n calls the model fair-code; describe it as source-available with limits, not as OSI open source.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Zapier pricing, read 2026-10-05; Zapier Help, "How is task usage measured in Zapier", updated 2026-08-21</span><span class="note">Plans, included tasks, overage multipliers, what counts as a task and which steps are free, read at source and dated; Autoreplay's schedule is not stated on the page read</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Make pricing, read 2026-10-05; Make Help, "Credits", "Operations"</span><span class="note">Credits replacing operations on 27 August, 1 credit per non-AI module run, AI modules at 2 or 10, free routers and error handlers; prices as displayed; whether a failed module run uses a credit is not stated</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">n8n pricing, read 2026-10-05; n8n docs, understand executions</span><span class="note">Plans and included executions as displayed; an execution is one run of the whole workflow; editor runs do not count</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">n8n Sustainable Use License 1.0 (LICENSE.md)</span><span class="note">Permitted uses and the .ee. file rule read at source; described as source-available with limits, not OSI open source</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">The per-unit device and the bench unit counts</span><span class="note">Constructed for comparison: plan price / included units, labelled mapped; the script and calculator outputs are real runs, the step-5 sentence is an example</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Session 3 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Zapier task = one successful action</b><span>Trigger, Filter, Paths, Formatter, Delay, Looping, Digest, Storage and errored steps are free. A full replay re-counts.</span></div>
+      <div class="cheat-item"><b>Make credit = one module run</b><span>Trigger included, polling checks too. Routers and error handlers free. Some AI modules cost 2 or 10. Formerly "operations".</span></div>
+      <div class="cheat-item"><b>n8n execution = one whole run</b><span>However many nodes. Production runs only; editor tests are free.</span></div>
+      <div class="cheat-item"><b>Count units before reading prices</b><span>The bench order is 2 tasks, 4 credits or 1 execution. The per-unit price is a comparison device, not a quote.</span></div>
+      <div class="cheat-item"><b>Every price carries a date</b><span>Read 5 October 2026 here. Re-verify before you buy, and click the monthly or annual toggle yourself.</span></div>
+      <div class="cheat-item"><b>Free to download is not free to run</b><span>Self-hosted n8n is source-available for internal, personal or non-commercial use, and you own the server, updates, backups and uptime.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>You have a tool and a count for a perfect day. Session 4 runs the bench workflow through a day that is not perfect: 600 events, timeouts, 500 errors, a reply that goes missing after the text was sent, and a 30-minute outage. Four rungs of reliability, computed in front of you, with the units on all three tools moving as retries and redrives kick in. Bring your step-5 sentence and see if it still holds.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Session 3 of 6 · learn-automation-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="02-triggers-and-actions.html">← Prev: Triggers, actions and the data between</a> &nbsp;·&nbsp; <a href="04-the-workflow-bench.html">Next: The workflow bench →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

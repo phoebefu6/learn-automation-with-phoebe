@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Session 5 of 6. Build the rungs the bench measured: retry only what is safe, back off with jitter, take the idempotency key from the event, park what cannot be sent in a dead-letter list, and send an alert a person can act on. Real n8n runs, 24 of 24 matched.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="When a step fails - learn automation with phoebe">
+<meta property="og:description" content="Session 5 of 6. Retries, backoff and jitter, idempotency keys, dead letters and alerts, built in n8n and mapped to Zapier and Make.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-automation-with-phoebe/courses/05-when-it-fails.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="When a step fails - learn automation with phoebe">
+<meta name="twitter:description" content="Session 5 of 6. Retry what is safe, key what is not, park what cannot wait.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Session 5 · When a step fails - learn automation with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-automation-with-phoebe</a> / Session 5 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn Automation with Phoebe · Session 5 of 6</div>
+    <h1>When a step <span class="accent">fails</span></h1>
+    <p class="sub">Session 4 measured four versions of one workflow on one hard day. Retrying everything lost fewer orders and texted 11 customers twice. Adding an idempotency key took the duplicates back. Only a dead-letter queue reached the 13 orders stuck behind a half-hour outage, and rung 4 texted all 344. Tonight you build those rungs yourself, setting by setting: which steps may be retried and how long to wait between tries, where the key comes from and what to do when the receiving app has none, and where an event goes when every retry has failed, with an alert a person can act on.</p>
+    <div class="chip-row">
+      <span class="chip level">🟠 Applied</span>
+      <span class="chip audience">Bring the rung you chose</span>
+      <span class="chip audience">n8n, mapped to Zapier and Make</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:3">3-18 · Retries, keys, dead letters</span>
+      <span class="a3" style="flex:5">18-40 · Build-along: rungs 3 and 4</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where we start</h2>
+    </div>
+    <p class="lede">The bench gave you a ladder and a price for each rung. It did not give you the settings. A retry is three fields on a node. An idempotency key is one header whose value has to come from the right place. A dead-letter queue is an error output wired to one more step, plus somebody who reads what lands there. Each of those is small, and each has one way of being set up that looks right and quietly does the opposite. Tonight is about finding those traps before a customer does.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">Live = presented in the 45 minutes</span>
+      <span class="pill">Self-study = the full depth, after class</span>
+      <span class="pill">★ Build-along = run it yourself</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> Rungs 3 and 4 running on your own machine against the mock endpoints, with the duplicate suppression proven by two curl calls and broken on purpose with one flag; a written rule for which of your steps may be retried; a retry ceiling you chose from real backoff output; and an alert message that names the event, the step, the error, the link and the owner.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers retries, backoff and jitter</span>
+      <h2>Retry only what is safe</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">A retry is a bet that the second try will see a different world from the first. For a read, the bet is free: looking a customer up twice changes nothing. For a write, the bet depends on a question the workflow usually cannot answer: did the first try already land? On the bench, with the "reply lost" failure switched off, retrying everything produced 0 duplicates. Switched on, it produced 11. Every one of them came from retrying a send whose reply never arrived.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 418" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Top: seven retry attempts from the real output of backoff.py. Each attempt has a ceiling that doubles, 1, 2, 4, 8, 16, 32 and then a cap of 60 seconds, and a dot for the wait actually drawn at random below it: 0.32, 0.30, 2.60, 0.58, 8.57, 11.70 and 3.48 seconds. Worst case before giving up is 123 seconds. Bottom: on one scale, a 30-minute provider outage of 1,800 seconds, against n8n's longest node retry window of 20 seconds and the backoff's worst case of 123 seconds. Neither reaches past the outage.">
+        <defs>
+          <filter id="s5aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="61" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s5aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s5aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s5aH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s5aL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s5aS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s5aB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s5aV { font: 800 18px Inter, sans-serif; fill: #0A4A92; }
+          .s5aA { font: 700 11px Inter, sans-serif; fill: #0A64C4; }
+          .s5aN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s5aSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- ceilings (hatched) at 8 px per second -->
+          <rect x="140" y="64" width="8" height="12" fill="url(#s5aHc)"/>
+          <rect x="140" y="88" width="16" height="12" fill="url(#s5aHc)"/>
+          <rect x="140" y="112" width="32" height="12" fill="url(#s5aHc)"/>
+          <rect x="140" y="136" width="64" height="12" fill="url(#s5aHc)"/>
+          <rect x="140" y="160" width="128" height="12" fill="url(#s5aHc)"/>
+          <rect x="140" y="184" width="256" height="12" fill="url(#s5aHc)"/>
+          <rect x="140" y="208" width="480" height="12" fill="url(#s5aHc)"/>
+          <!-- the wait actually drawn -->
+          <circle cx="142.6" cy="70" r="4.5" fill="#0A4A92" stroke="#0A4A92"/>
+          <circle cx="142.4" cy="94" r="4.5" fill="#0A4A92" stroke="#0A4A92"/>
+          <circle cx="160.8" cy="118" r="4.5" fill="#0A4A92" stroke="#0A4A92"/>
+          <circle cx="144.6" cy="142" r="4.5" fill="#0A4A92" stroke="#0A4A92"/>
+          <circle cx="208.6" cy="166" r="4.5" fill="#0A4A92" stroke="#0A4A92"/>
+          <circle cx="233.6" cy="190" r="4.5" fill="#0A4A92" stroke="#0A4A92"/>
+          <circle cx="167.8" cy="214" r="4.5" fill="#0A4A92" stroke="#0A4A92"/>
+          <!-- seconds axis -->
+          <path d="M140 232 L620 232" stroke="#4D5D74"/>
+          <path d="M260 232 L260 237" stroke="#4D5D74"/>
+          <path d="M380 232 L380 237" stroke="#4D5D74"/>
+          <path d="M500 232 L500 237" stroke="#4D5D74"/>
+          <!-- formula panel -->
+          <rect x="716" y="58" width="144" height="164" rx="10" transform="rotate(0.6 788 140)" fill="#EBF3FD"/>
+          <!-- outage scale: 740 px = 1,800 s -->
+          <rect x="90" y="300" width="740" height="22" rx="4" transform="rotate(0.2 460 311)" fill="#EBF3FD"/>
+          <rect x="90" y="334" width="8" height="18" fill="#B5480C" stroke="#B5480C"/>
+          <rect x="90" y="362" width="51" height="18" fill="url(#s5aHc)"/>
+        </g>
+
+        <text class="s5aH" x="30" y="26">BACKOFF WITH FULL JITTER</text>
+        <text class="s5aS" x="230" y="26">real output of backoff.py: each wait is drawn at random below its ceiling</text>
+
+        <text class="s5aA" x="30" y="50">attempt</text>
+        <text class="s5aA" x="128" y="50" text-anchor="end">ceiling</text>
+        <text class="s5aA" x="140" y="50">hatched = the range, dot = the wait actually drawn</text>
+
+        <text class="s5aL" x="52" y="74" text-anchor="middle">0</text>
+        <text class="s5aL" x="52" y="98" text-anchor="middle">1</text>
+        <text class="s5aL" x="52" y="122" text-anchor="middle">2</text>
+        <text class="s5aL" x="52" y="146" text-anchor="middle">3</text>
+        <text class="s5aL" x="52" y="170" text-anchor="middle">4</text>
+        <text class="s5aL" x="52" y="194" text-anchor="middle">5</text>
+        <text class="s5aL" x="52" y="218" text-anchor="middle">6</text>
+        <text class="s5aS" x="128" y="74" text-anchor="end">1 s</text>
+        <text class="s5aS" x="128" y="98" text-anchor="end">2 s</text>
+        <text class="s5aS" x="128" y="122" text-anchor="end">4 s</text>
+        <text class="s5aS" x="128" y="146" text-anchor="end">8 s</text>
+        <text class="s5aS" x="128" y="170" text-anchor="end">16 s</text>
+        <text class="s5aS" x="128" y="194" text-anchor="end">32 s</text>
+        <text class="s5aS" x="128" y="218" text-anchor="end">60 s</text>
+
+        <text class="s5aS" x="158" y="74">drew 0.32 s</text>
+        <text class="s5aS" x="166" y="98">drew 0.30 s</text>
+        <text class="s5aS" x="182" y="122">drew 2.60 s</text>
+        <text class="s5aS" x="214" y="146">drew 0.58 s</text>
+        <text class="s5aS" x="278" y="170">drew 8.57 s</text>
+        <text class="s5aS" x="406" y="194">drew 11.70 s</text>
+        <text class="s5aS" x="630" y="218">drew 3.48 s</text>
+
+        <text class="s5aS" x="140" y="250" text-anchor="middle">0</text>
+        <text class="s5aS" x="260" y="250" text-anchor="middle">15</text>
+        <text class="s5aS" x="380" y="250" text-anchor="middle">30</text>
+        <text class="s5aS" x="500" y="250" text-anchor="middle">45</text>
+        <text class="s5aS" x="620" y="250" text-anchor="middle">60 s</text>
+
+        <text class="s5aH" x="730" y="82">FULL JITTER</text>
+        <text class="s5aS" x="730" y="102">wait = random</text>
+        <text class="s5aS" x="730" y="118">between 0 and</text>
+        <text class="s5aS" x="730" y="134">min(60, 2^n) s</text>
+        <text class="s5aS" x="730" y="160">worst case, every</text>
+        <text class="s5aS" x="730" y="176">draw at its ceiling</text>
+        <text class="s5aV" x="730" y="204">123 s</text>
+
+        <text class="s5aH" x="30" y="286">THE SAME RETRIES AGAINST A 30-MINUTE OUTAGE</text>
+        <text class="s5aS" x="380" y="286">one scale: the full bar is 1,800 seconds</text>
+        <text class="s5aL" x="460" y="315" text-anchor="middle">SMS provider down, 13:00 to 13:30: 1,800 s</text>
+        <text class="s5aB" x="110" y="347">n8n node retry, longest possible: 4 waits x 5 s = 20 s</text>
+        <text class="s5aS" x="152" y="375">the backoff above, worst case: 123 s</text>
+
+        <text class="s5aN" x="30" y="404">Neither window reaches past the outage. A parked event and a later redrive do (Part 3).</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - retries buy seconds; the rust sliver is everything n8n's node settings can buy, drawn to the outage's scale</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span>Which steps may be retried<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>Reads, freely.</strong> A lookup, a search, a "get the row" call returns the same thing twice and changes nothing on the other side. Retry it as often as the time budget allows. On the bench, the CRM lookup timing out or returning a 500 cost nothing once it was retried.</p>
+        <p><strong>Writes, only with a key.</strong> A send, a create, a charge, a post to a channel: if the first try landed and only the reply was lost, the retry does it again. The workflow sees a timeout and cannot tell "never arrived" from "arrived, answer lost". Real n8n showed exactly this on rung 1: the run went red with "timeout of 10000ms exceeded" while the mock's log held one delivered message. Retry a write only when the receiver can recognise the repeat, which is what Part 2's key is for.</p>
+        <p><strong>Writes with no key at all.</strong> Do not retry them automatically. Park the event (Part 3) and let a person check the receiving side before anything is sent again.</p>
+        <p>In n8n the three settings sit on each node's Settings tab: <strong>Retry On Fail</strong>, <strong>Max Tries</strong> and <strong>Wait Between Tries</strong>. Read in the engine source (n8n-core 2.41.6, <code>getRetryParams</code>), Max Tries is clamped to 2 to 5 (default 3) and the wait to at most 5,000 ms (default 1,000). The longest node-level retry window is therefore 4 waits of 5 seconds: <strong>20 seconds</strong>.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>Backoff and jitter, and why n8n's node retry is not backoff<span class="mini">4 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>Backoff</strong> means waiting longer after each failure: 1 second, then 2, then 4, up to a cap. A struggling server gets room to recover instead of a steady hammering. <strong>Jitter</strong> means not waiting exactly that long, but a random time below it. Without jitter, every client that failed at the same moment retries at the same moment, and the retries arrive as one more spike.</p>
+        <p>Marc Brooker's AWS Architecture Blog post (4 March 2015) compared the variants in a simulation. <strong>Full jitter</strong>, where the wait is a random value between 0 and the ceiling, had the lowest client work, and with 100 contending clients adding jitter cut the number of calls by more than half. The figure above is <code>backoff.py</code> running full jitter with a 60-second cap: the ceilings double, the actual waits do not, and the worst case before giving up is 123 seconds.</p>
+        <p>n8n's node retry is not backoff. Wait Between Tries is one fixed number, the same before every try, with no jitter and a ceiling of 5 seconds. That is fine for a blip. It is not a strategy for a provider that is down, because no setting on the node can wait longer than 20 seconds in total. Anything that has to outlast minutes or hours needs to leave the run and come back later: a dead-letter list and a redrive. Make's Retry error handler does schedule attempts minutes apart (reported, see the table below), and Zapier's Autoreplay replays an errored step on its own schedule, which its help page does not state.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>Stripe backs off for three days.</strong> When your endpoint fails to accept a webhook, Stripe's documentation says it retries automatic delivery for up to three days in live mode, with exponential backoff. The same page warns that "Webhook endpoints might occasionally receive the same event more than once." Both halves are the lesson: the sender retries patiently over days, not seconds, and because it retries, the receiver has to recognise a repeat. Your workflow is the sender to the SMS provider and the receiver for Stripe at the same time.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers idempotency keys and what to do without one</span>
+      <h2>The key comes from the event</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">An idempotency key is a name for one intended action, sent with every attempt at it. The receiver remembers the first result for that name and hands the same result back to any repeat, without doing the action again. It works only if two things hold: every retry of the same action carries the same key, and the receiver keeps a store of keys it has seen. On the bench, switching the store off on rung 4 put 13 duplicates straight back.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Before and after. Wrong way, left: a Remove Duplicates step sits before the send. On the first run at 13:12, an order is new and is marked seen, then Send the SMS fails with a 503 and nothing is sent. At the 23:30 redrive, Remove Duplicates finds an order already seen and drops it, so the send never runs and the customer never gets a text. Right way, right: check if seen, send, then mark seen. On the first run the send fails and the mark is skipped. At the redrive the event is still not seen, it is sent once, and only then marked.">
+        <defs>
+          <filter id="s5bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="67" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s5bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s5bAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s5bH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s5bR { font: 800 12px Inter, sans-serif; fill: #991B1B; }
+          .s5bL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s5bS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s5bB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s5bA { font: 700 11px Inter, sans-serif; fill: #0A64C4; }
+          .s5bN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s5bSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- panels -->
+          <rect x="30" y="40" width="400" height="222" rx="12" transform="rotate(-0.3 230 151)" fill="#FEF2F2" stroke="#FCA5A5"/>
+          <rect x="450" y="40" width="410" height="222" rx="12" transform="rotate(0.3 655 151)" fill="#EBF3FD"/>
+          <!-- wrong way, first run -->
+          <rect x="46" y="96" width="164" height="44" rx="8" transform="rotate(-1 128 118)" fill="#FFFFFF"/>
+          <rect x="250" y="96" width="164" height="44" rx="8" transform="rotate(1 332 118)" fill="#FFFFFF"/>
+          <path d="M214 118 L244 118" marker-end="url(#s5bAr)"/>
+          <!-- wrong way, redrive -->
+          <rect x="46" y="180" width="164" height="44" rx="8" transform="rotate(0.8 128 202)" fill="#FDEEE4" stroke="#B5480C"/>
+          <rect x="250" y="180" width="164" height="44" rx="8" transform="rotate(-0.8 332 202)" fill="#FFFFFF" stroke="#C7D4E5" stroke-dasharray="6 5"/>
+          <path d="M214 202 L244 202" stroke="#C7D4E5" stroke-dasharray="5 5"/>
+          <!-- right way, first run -->
+          <rect x="466" y="96" width="108" height="44" rx="8" transform="rotate(-1 520 118)" fill="#FFFFFF"/>
+          <rect x="604" y="96" width="108" height="44" rx="8" transform="rotate(1 658 118)" fill="#FFFFFF"/>
+          <rect x="742" y="96" width="108" height="44" rx="8" transform="rotate(-0.8 796 118)" fill="#FFFFFF" stroke="#C7D4E5" stroke-dasharray="6 5"/>
+          <path d="M578 118 L600 118" marker-end="url(#s5bAr)"/>
+          <path d="M716 118 L738 118" stroke="#C7D4E5" stroke-dasharray="5 5"/>
+          <!-- right way, redrive -->
+          <rect x="466" y="180" width="108" height="44" rx="8" transform="rotate(0.8 520 202)" fill="#FFFFFF"/>
+          <rect x="604" y="180" width="108" height="44" rx="8" transform="rotate(-1 658 202)" fill="#FFFFFF"/>
+          <rect x="742" y="180" width="108" height="44" rx="8" transform="rotate(1 796 202)" fill="#FFFFFF"/>
+          <path d="M578 202 L600 202" marker-end="url(#s5bAr)"/>
+          <path d="M716 202 L738 202" marker-end="url(#s5bAr)"/>
+        </g>
+
+        <text class="s5bR" x="46" y="64">WRONG WAY: dedupe before the send</text>
+        <text class="s5bH" x="466" y="64">RIGHT WAY: check, send, then mark</text>
+        <text class="s5bA" x="46" y="88">first run, 13:12 (constructed time)</text>
+        <text class="s5bA" x="46" y="172">redrive, 23:30</text>
+        <text class="s5bA" x="466" y="88">first run, 13:12</text>
+        <text class="s5bA" x="466" y="172">redrive, 23:30</text>
+
+        <text class="s5bL" x="58" y="114">Remove Duplicates</text>
+        <text class="s5bS" x="58" y="130">new, marked seen</text>
+        <text class="s5bL" x="262" y="114">Send the SMS</text>
+        <text class="s5bS" x="262" y="130">503, nothing sent</text>
+        <text class="s5bL" x="58" y="198">Remove Duplicates</text>
+        <text class="s5bB" x="58" y="214">already seen: dropped</text>
+        <text class="s5bS" x="262" y="198">Send the SMS</text>
+        <text class="s5bS" x="262" y="214">never runs</text>
+
+        <text class="s5bL" x="476" y="114">Check seen?</text>
+        <text class="s5bS" x="476" y="130">not seen</text>
+        <text class="s5bL" x="614" y="114">Send the SMS</text>
+        <text class="s5bS" x="614" y="130">503, no text</text>
+        <text class="s5bS" x="752" y="114">Mark seen</text>
+        <text class="s5bS" x="752" y="130">skipped</text>
+        <text class="s5bL" x="476" y="198">Check seen?</text>
+        <text class="s5bS" x="476" y="214">still not seen</text>
+        <text class="s5bL" x="614" y="198">Send the SMS</text>
+        <text class="s5bS" x="614" y="214">sent once</text>
+        <text class="s5bL" x="752" y="198">Mark seen</text>
+        <text class="s5bS" x="752" y="214">marked now</text>
+
+        <text class="s5bN" x="30" y="286">Mark an event seen only after the send says yes. A failed send then stays eligible for the redrive.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the rust box is a customer who never gets a text, and a run log that shows nothing wrong</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>Where the key comes from<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>From the event, never from the attempt.</strong> The key has to be the same on the first try, every retry and the 23:30 redrive. The event id is exactly that: it was decided before your workflow ran and it travels with the event. On rung 3 the send node's header is <code>Idempotency-Key</code> with the value <code>$('Shape the message').item.json.event_id</code>. Reaching back to "Shape the message" matters, because the lookup step replaced the item with the CRM's answer and the event id is no longer on it (session 2).</p>
+        <p><strong>A fresh random id per try protects nothing.</strong> A key generated inside the step, a UUID or a timestamp, is new on every attempt, so the receiver sees a different name each time and does the action each time. The header is present, the code looks careful, and the duplicate rate is exactly that of rung 2.</p>
+        <p><strong>When the receiving app has no key.</strong> Many APIs accept no idempotency header. Then keep your own "already sent" record: a sheet, a database row or a small store, keyed by event id. n8n's Remove Duplicates node can hold that record (operation "Remove Items Processed in Previous Executions", keep items where the value is new, history of 10,000 items by default, scoped to the node or the whole workflow). The trap is in the figure: placed before the send, it marks the event seen before the send has succeeded. A send that fails and is redriven later is then dropped as a repeat. <strong>Check before, mark after success.</strong> Your own record also cannot cover the lost-reply case completely: if the send landed and the reply did not, your record says "not sent". Only the receiver's own key closes that gap.</p>
+        <p>The same discipline at data-team scale, where whole pipeline tasks are retried and backfilled, belongs to <a href="https://phoebefu6.github.io/learn-data-orchestration-with-phoebe/">Data Orchestration</a>.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>Provider semantics differ: Stripe replays a stored 500<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Stripe's <a href="https://docs.stripe.com/api/idempotent_requests">idempotent requests</a> are the reference most people copy, and they hold three surprises. First, Stripe saves "the resulting status code and body of the first request made for any given idempotency key, regardless of whether it succeeds or fails". A repeat with the same key returns the same result, "including 500 errors". If the first try failed on Stripe's side once execution had begun, retrying with the same key gets the same failure back; it does not try again.</p>
+        <p>Second, keys may be pruned after at least 24 hours. A redrive the next day, or a manual replay a week later, can arrive after the key is gone, and then it is a new request. Third, keys can be up to 255 characters, and Stripe advises against putting personal data in them: an event id is a good key, a customer's email address is not.</p>
+        <p>The mock SMS endpoint behaves differently: it suppresses a repeat and answers <code>duplicate-suppressed</code> with the first message id. Neither is wrong. They are different contracts, and the only way to know which one you are calling is to read the provider's page for it before you rely on the key.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>GitHub hands you the key.</strong> GitHub's webhook best-practices page says to answer within 10 seconds and to redeliver missed deliveries, and that a redelivery keeps the same <code>X-GitHub-Delivery</code> header. That header is a ready-made idempotency key for anything your workflow does on receipt: record it before you act on a delivery you have not seen, and a redelivered one becomes a no-op. The sender already decided the name of the action. Your job is to use it rather than invent a new one.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers dead letters and alerts</span>
+      <h2>Park it, then tell a person</h2>
+      <span class="tag concept">5 min live</span>
+    </div>
+    <p class="lede">Some failures outlast every retry. During the bench's half-hour outage, rungs 2 and 3 lost the same 13 orders no matter how they retried. A dead-letter queue changes the question from "how long can this run wait?" to "where does the event go when it cannot wait any longer?" It goes to a list, it stays there with its id, and later, once the provider is back, it is sent through the same workflow again. Rung 4 did that at 23:30 and texted all 344.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 390" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rung 4 sketched. Six boxes in a row: Order webhook, Is it an order, Shape the message, Look up customer, Send the SMS, text sent once. The lookup and the send each have an error output into Park in dead-letter queue, which posts the event id to the dead-letter list, shown holding evt_0251 from the real n8n run. A curved arrow carries the 23:30 redrive from the list back to the webhook; the key on the send makes the second pass safe. On the right, an error workflow starting with Error Trigger runs when a run fails anyway, and an alert to a person is fed by both the error workflow and the list.">
+        <defs>
+          <filter id="s5cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="73" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s5cHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s5cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s5cH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s5cL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s5cS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s5cB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s5cA { font: 700 11px Inter, sans-serif; fill: #0A64C4; }
+          .s5cN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s5cSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- main row -->
+          <rect x="30" y="86" width="112" height="48" rx="10" transform="rotate(-0.8 86 110)" fill="#FFFFFF"/>
+          <rect x="166" y="86" width="112" height="48" rx="10" transform="rotate(0.6 222 110)" fill="#FFFFFF"/>
+          <rect x="302" y="86" width="112" height="48" rx="10" transform="rotate(-0.5 358 110)" fill="#FFFFFF"/>
+          <rect x="438" y="86" width="112" height="48" rx="10" transform="rotate(0.7 494 110)" fill="#FFFFFF"/>
+          <rect x="574" y="86" width="112" height="48" rx="10" transform="rotate(-0.6 630 110)" fill="#FFFFFF"/>
+          <rect x="710" y="86" width="112" height="48" rx="10" transform="rotate(0.5 766 110)" fill="#EBF3FD"/>
+          <path d="M144 110 L162 110" marker-end="url(#s5cAr)"/>
+          <path d="M280 110 L298 110" marker-end="url(#s5cAr)"/>
+          <path d="M416 110 L434 110" marker-end="url(#s5cAr)"/>
+          <path d="M552 110 L570 110" marker-end="url(#s5cAr)"/>
+          <path d="M688 110 L706 110" marker-end="url(#s5cAr)"/>
+          <!-- error outputs -->
+          <path d="M494 136 L546 186" stroke="#4D5D74" stroke-dasharray="6 5" marker-end="url(#s5cAr)"/>
+          <path d="M630 136 L612 186" stroke="#4D5D74" stroke-dasharray="6 5" marker-end="url(#s5cAr)"/>
+          <!-- park step -->
+          <rect x="470" y="190" width="210" height="44" rx="10" transform="rotate(0.4 575 212)" fill="#FFFFFF"/>
+          <path d="M575 236 L575 258" marker-end="url(#s5cAr)"/>
+          <!-- the dead-letter list -->
+          <rect x="470" y="262" width="210" height="48" rx="8" transform="rotate(-0.6 575 286)" fill="#FDEEE4" stroke="#B5480C"/>
+          <!-- redrive back to the webhook -->
+          <path d="M466 290 C 300 300, 90 262, 86 140" stroke="#0A4A92" marker-end="url(#s5cAr)"/>
+          <!-- error workflow and alert -->
+
+          <rect x="704" y="190" width="156" height="44" rx="10" transform="rotate(-0.6 782 212)" fill="#FFFFFF"/>
+          <path d="M782 236 L782 258" marker-end="url(#s5cAr)"/>
+          <path d="M682 286 L700 286" marker-end="url(#s5cAr)"/>
+          <rect x="704" y="262" width="156" height="48" rx="10" transform="rotate(0.6 782 286)" fill="#EBF3FD"/>
+        </g>
+
+        <text class="s5cH" x="30" y="28">RUNG 4: WHERE A FAILED EVENT GOES</text>
+        <text class="s5cS" x="300" y="28">evt_0251 arrives in the outage; real n8n run: status success, 0 texts, parked</text>
+
+        <text class="s5cL" x="42" y="106">Order</text>
+        <text class="s5cL" x="42" y="122">webhook</text>
+        <text class="s5cL" x="178" y="106">Is it an</text>
+        <text class="s5cL" x="178" y="122">order?</text>
+        <text class="s5cL" x="314" y="106">Shape the</text>
+        <text class="s5cL" x="314" y="122">message</text>
+        <text class="s5cL" x="450" y="106">Look up</text>
+        <text class="s5cL" x="450" y="122">customer</text>
+        <text class="s5cL" x="586" y="106">Send the</text>
+        <text class="s5cL" x="586" y="122">SMS</text>
+        <text class="s5cL" x="722" y="106">text sent</text>
+        <text class="s5cL" x="722" y="122">once</text>
+
+        <text class="s5cA" x="470" y="170" text-anchor="end">error output</text>
+        <text class="s5cA" x="640" y="170">error output</text>
+
+        <text class="s5cL" x="482" y="209">Park in dead-letter queue</text>
+        <text class="s5cS" x="482" y="225">POST the event_id to the list</text>
+        <text class="s5cB" x="482" y="282">dead-letter list</text>
+        <text class="s5cL" x="482" y="300">["evt_0251"]</text>
+
+        <text class="s5cS" x="716" y="178">when a run fails anyway:</text>
+        <text class="s5cL" x="716" y="209">Error workflow</text>
+        <text class="s5cS" x="716" y="225">Error Trigger first</text>
+        <text class="s5cL" x="716" y="282">Alert a person</text>
+        <text class="s5cS" x="716" y="300">id, step, error, link</text>
+
+        <text class="s5cB" x="120" y="330">23:30 redrive: the same event id goes back in</text>
+        <text class="s5cS" x="120" y="346">the key on the send makes a second pass safe</text>
+
+        <text class="s5cN" x="30" y="376">Parked runs end green, so the error workflow never sees them. The list itself has to raise the alert.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the rust list is the whole point of rung 4: an event that failed, kept by name, waiting for a second chance</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>A dead-letter list someone reads<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The pattern is old and well documented. Amazon SQS describes a dead-letter queue as the place a source queue sends "messages that are not processed successfully". A setting called <code>maxReceiveCount</code> decides how many receives a message gets before it moves there. A <strong>redrive</strong> moves messages back to the source to be processed again. The documentation also advises that the dead-letter queue keep messages longer than the source queue, and it documents alarms on messages arriving there.</p>
+        <p>In n8n, rung 4 is two settings and one step. On both HTTP nodes, <strong>On Error</strong> is set to <strong>Continue (using error output)</strong>, which gives the node a second output for items that failed after all their retries. Both error outputs go to <strong>Park in dead-letter queue</strong>, which posts the event id to a list. On the real n8n run, evt_0251, arriving in the outage, retried for about 10 seconds, ended with status <code>success</code>, last node "Park in dead-letter queue", 0 messages sent, and a dead-letter list of <code>["evt_0251"]</code>.</p>
+        <p>A list nobody reads is a slower way of losing the order. Three rules make it a queue rather than a graveyard: <strong>one named owner</strong> who checks it, <strong>an alert</strong> when it is not empty, and <strong>a redrive</strong> that sends parked events back through the same workflow, which is safe only because the key from Part 2 is on the send. How that owner works through it, step by step, is a runbook; the craft of writing one is in <a href="https://phoebefu6.github.io/learn-data-reliability-with-phoebe/courses/b4-runbooks.html">Data Reliability's runbooks session</a>.</p>
+        <p><strong>An alert someone can act on</strong> names five things: the event id, the step that failed, the error text, a link to the run, and the person who owns it. "Workflow failed" sent to a shared channel names none of them.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>Error workflows versus error outputs<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>n8n has two error mechanisms, and they catch different things. An <strong>error output</strong> is per node: the failed item leaves by a second wire and the run continues. An <strong>error workflow</strong> is per workflow: in Workflow Settings you name a separate workflow that must start with the <strong>Error Trigger</strong> node, and n8n runs it when an execution fails. Its error data includes <code>execution.retryOf</code> when the failed execution was itself a retry. n8n's docs note it cannot be tested with manual runs: it fires on production executions only.</p>
+        <p>The catch shows in the real run above. evt_0251 was parked through an error output, so the execution ended <code>success</code>. An error workflow would not have fired for it. Use both: the error output parks the events you expected to fail, and the error workflow catches the run that fails in a way you did not expect, such as the park step itself being unreachable. Alert from the list for the first, from the error workflow for the second.</p>
+        <p>Rung 1 shows the opposite blind spot. With no retry and no error output, evt_0101's run ended <code>error</code> with "The connection was aborted, perhaps the server is offline" and "timeout of 10000ms exceeded", while the customer had in fact been texted. An error workflow alert there would have been true and misleading: the run failed, the customer was fine. Red is not lost, as session 4 found 11 times on one day.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>Keep the dead letters longer than the live ones.</strong> Amazon's SQS guide advises setting the dead-letter queue's retention longer than the source queue's. The reason applies to any automation: a parked event is only useful if it is still there when someone gets to it. If your list is a sheet that a cleanup Zap clears every night, or a store whose history is capped, an event parked on Friday may be gone by Monday. Check how long your list keeps things before the first outage, not during it.</p>
+    </div>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along</span>
+      <h2>Rungs 3 and 4, by hand</h2>
+      <span class="tag demo">★ 22 min · everyone builds</span>
+    </div>
+    <p class="lede">Six steps. You need Node 24 and n8n from session 2, and Python 3 for the mock endpoints. If n8n will not start, every step still works by reading the JSON files and running the two Python scripts. The outputs below are real, captured on n8n 2.41.6 against <a href="../materials/mock_server.py">mock_server.py</a>; across six events and four rungs, 24 of 24 runs matched the bench runner's prediction.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 312" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The difference between rung-3.json and rung-4.json. Left, rung 3: Look up customer and Send the SMS each retry 3 times 5,000 ms apart, the send carries an Idempotency-Key, and On Error is not set, so a failure stops the run. There is no dead-letter step. Right, rung 4: the same two nodes, each with onError set to continueErrorOutput and output 1 wired to Park, plus one new node, Park in dead-letter queue, which posts the event id.">
+        <defs>
+          <filter id="s5dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="79" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s5dHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s5dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s5dH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s5dL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s5dS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s5dB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s5dN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s5dSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- rung 3 -->
+          <rect x="40" y="60" width="360" height="72" rx="10" transform="rotate(-0.4 220 96)" fill="#FFFFFF"/>
+          <rect x="40" y="144" width="360" height="72" rx="10" transform="rotate(0.4 220 180)" fill="#FFFFFF"/>
+          <rect x="40" y="228" width="360" height="44" rx="10" transform="rotate(-0.3 220 250)" fill="#FFFFFF" stroke="#C7D4E5" stroke-dasharray="6 5"/>
+          <!-- arrow between files -->
+          <path d="M408 166 L470 166" marker-end="url(#s5dAr)"/>
+          <!-- rung 4 -->
+          <rect x="480" y="60" width="360" height="72" rx="10" transform="rotate(0.4 660 96)" fill="#FFFFFF"/>
+          <rect x="490" y="106" width="340" height="18" rx="4" fill="#FDEEE4" stroke="#B5480C"/>
+          <rect x="480" y="144" width="360" height="72" rx="10" transform="rotate(-0.4 660 180)" fill="#FFFFFF"/>
+          <rect x="490" y="190" width="340" height="18" rx="4" fill="#FDEEE4" stroke="#B5480C"/>
+          <rect x="480" y="228" width="360" height="44" rx="10" transform="rotate(0.3 660 250)" fill="#FDEEE4" stroke="#B5480C"/>
+        </g>
+
+        <text class="s5dH" x="40" y="32">RUNG-3.JSON</text>
+        <text class="s5dS" x="40" y="48">retries and a key, no way out</text>
+        <text class="s5dH" x="480" y="32">RUNG-4.JSON</text>
+        <text class="s5dS" x="480" y="48">the same, plus somewhere to go</text>
+
+        <text class="s5dL" x="54" y="80">Look up customer</text>
+        <text class="s5dS" x="54" y="98">retry: 3 tries, 5,000 ms apart</text>
+        <text class="s5dS" x="54" y="119">onError: not set, so the run stops</text>
+        <text class="s5dL" x="54" y="164">Send the SMS</text>
+        <text class="s5dS" x="54" y="182">retry: 3 tries, 5,000 ms apart, Idempotency-Key</text>
+        <text class="s5dS" x="54" y="203">onError: not set, so the run stops</text>
+        <text class="s5dS" x="54" y="254">no dead-letter step</text>
+
+        <text class="s5dL" x="494" y="80">Look up customer</text>
+        <text class="s5dS" x="494" y="98">retry: 3 tries, 5,000 ms apart</text>
+        <text class="s5dB" x="498" y="119">onError: continueErrorOutput, output 1 to Park</text>
+        <text class="s5dL" x="494" y="164">Send the SMS</text>
+        <text class="s5dS" x="494" y="182">retry: 3 tries, 5,000 ms apart, Idempotency-Key</text>
+        <text class="s5dB" x="498" y="203">onError: continueErrorOutput, output 1 to Park</text>
+        <text class="s5dB" x="494" y="246">new: Park in dead-letter queue</text>
+        <text class="s5dS" x="494" y="262">POST /queue/dead-letter with the event_id</text>
+
+        <text class="s5dN" x="30" y="298">Two nodes gain one setting and one wire each; one node is new. The key and the retries carry over.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the rust lines are the entire distance from rung 3 to rung 4: a way out for a failed item, and a place for it to land</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Open rung 3 and find the settings.</strong> Open <a href="../assets/workflows/rung-3.json">rung-3.json</a> in a text editor, or import it into n8n and open the "Send the SMS" node. Find the three retry fields and the header. The key's value reaches back to "Shape the message" for the event id, because the lookup replaced the item.</p>
+        <div class="prompt-box good"><span class="label">★ Step 1 · the send node in rung-3.json</span>"retryOnFail": true, "maxTries": 3, "waitBetweenTries": 5000,
+"sendHeaders": true,
+"headerParameters": {"parameters": [{"name": "Idempotency-Key",
+   "value": "={{ $('Shape the message').item.json.event_id }}"}]}</div>
+      </div>
+      <div class="step">
+        <p><strong>Prove the store.</strong> Start the mock endpoints with <a href="../materials/mock_server.py">mock_server.py</a> and send the same message twice with the same key. The second answer is the receiver recognising the repeat and handing back the first message id. The log holds one delivery.</p>
+        <div class="prompt-box good"><span class="label">★ Step 2 · two sends, one delivery</span>$ python3 materials/mock_server.py
+mock endpoints on http://127.0.0.1:8787  (idempotency store ON)
+
+$ curl -s -X POST http://127.0.0.1:8787/sms/send -H 'Content-Type: application/json' \
+    -H 'Idempotency-Key: evt_0002' -d '{"event_id":"evt_0002","to":"+1555010071","text":"Order evt_0002 confirmed"}'
+{"status": "sent", "message_id": "msg_1"}
+$ (the same command again)
+{"status": "duplicate-suppressed", "message_id": "msg_1"}
+$ curl -s http://127.0.0.1:8787/log
+{"deliveries": [{"event_id": "evt_0002", "message_id": "msg_1", "phase": "main"}], "deadLetter": []}</div>
+      </div>
+      <div class="step">
+        <p><strong>Break it on purpose.</strong> Stop the server and restart it with <code>--no-store</code>, which makes it ignore the <code>Idempotency-Key</code> header. Repeat step 2: the second call should now answer <code>sent</code> with a new message id, and <code>/log</code> should hold two deliveries. On real n8n, evt_0101, whose first reply is lost, produced <strong>2 messages on rung 3 and 2 on rung 4</strong> with the store off. The header was still sent every time. A key is a request; only the receiver's store makes it a guarantee. For contrast, rung 1 on the same event ended red with n8n's own error text while the customer had been texted once.</p>
+        <div class="prompt-box good"><span class="label">★ Step 3 · the break button, and what rung 1 said</span>$ python3 materials/mock_server.py --no-store
+# then repeat step 2 and read /log: look for two deliveries for evt_0002
+
+Recorded from the real n8n 2.41.6 runs:
+rung 3, evt_0101, store off:  2 messages
+rung 4, evt_0101, store off:  2 messages
+rung 1, evt_0101, store on:   status error, last node "Send the SMS"
+  "The connection was aborted, perhaps the server is offline"
+  "timeout of 10000ms exceeded"
+  mock delivery log: 1 message (red run, customer texted)</div>
+      </div>
+      <div class="step">
+        <p><strong>Add the way out.</strong> Open <a href="../assets/workflows/rung-4.json">rung-4.json</a>, or edit rung 3 yourself: on "Look up customer" and on "Send the SMS", set Settings, On Error, to <strong>Continue (using error output)</strong>; add an HTTP Request node named "Park in dead-letter queue" that POSTs the event id to <code>http://127.0.0.1:8787/queue/dead-letter</code>; wire the error output of both nodes to it. Restart the mock with the store on. Run an order that arrives in the outage and compare with the recorded result.</p>
+        <div class="prompt-box good"><span class="label">★ Step 4 · evt_0251 on rung 4, recorded from real n8n</span>"onError": "continueErrorOutput"   (on both HTTP nodes, output 1 to the park step)
+
+status:              success
+last node executed:  Park in dead-letter queue
+messages sent:       0
+dead-letter list:    ["evt_0251"]
+started 06:13:00.577Z, stopped 06:13:10.683Z   (3 tries, 5 s apart: about 10 s)</div>
+      </div>
+      <div class="step">
+        <p><strong>Choose your own retry ceiling.</strong> Run <a href="../materials/backoff.py">backoff.py</a>. It prints full-jitter waits with a 60-second cap, seeded so your output matches this one. Then decide, for the step you care about, how long the run may wait in total before the event is parked. If the answer is more than 20 seconds, n8n's node settings cannot give it to you, and the redrive has to.</p>
+        <div class="prompt-box good"><span class="label">★ Step 5 · python3 materials/backoff.py</span>attempt  ceiling  full-jitter wait (s)
+      0        1      0.32
+      1        2      0.30
+      2        4      2.60
+      3        8      0.58
+      4       16      8.57
+      5       32     11.70
+      6       60      3.48
+worst case before giving up: 123 s</div>
+      </div>
+      <div class="step">
+        <p><strong>Write the alert.</strong> Five fields, in this order, for the event you just parked. Fill in your own link and owner. The example below is constructed; the event id, step and error words come from the runs above.</p>
+        <div class="prompt-box good"><span class="label">★ Step 6 · an alert a person can act on (constructed example)</span>Order SMS: 1 event parked in the dead-letter list
+event:  evt_0251
+step:   Send the SMS (after 3 tries)
+error:  503 from the SMS provider
+run:    &lt;link to the execution in your n8n&gt;
+owner:  &lt;one named person, not a channel&gt;
+next:   redrive at 23:30, or sooner once the provider is back</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <p><strong>Rungs 3 and 4 in Zapier and Make.</strong> The table below maps each rung's settings. The key is the same everywhere because it lives in the receiving app's API, not in the automation tool. Where a cell says reported or not stated, the vendor's own pages did not say more when read.</p>
+    </div>
+
+    <table class="clean">
+      <tr><th>Rung</th><th>n8n</th><th>Make</th><th>Zapier</th></tr>
+      <tr><td>1 · No retry</td><td>Retry On Fail off: one try; On Error = Stop Workflow</td><td>No error handler on the module</td><td>Autoreplay off</td></tr>
+      <tr><td>2 · Retry</td><td>Retry On Fail; Max Tries 2 to 5 (default 3); Wait Between Tries up to 5,000 ms, fixed, read in engine source</td><td>Retry error handler (formerly Break); needs incomplete executions enabled; attempts 1 to 100 and minutes between them are reported, not read at source</td><td>Autoreplay replays the errored step, Professional plan and above; schedule not stated</td></tr>
+      <tr><td>3 · + idempotency key</td><td>Idempotency-Key header on the HTTP Request node, value from the event id</td><td>The same header on the HTTP module; works only if the receiving app's API honours it</td><td>The same, wherever the step lets you set headers; the receiving app's API decides</td></tr>
+      <tr><td>4 · + dead-letter</td><td>On Error = Continue (using error output) to a park step; plus an error workflow starting with Error Trigger</td><td>Incomplete executions keep the failed run for Retry; Resume and Skip handle an error in place; parking to a list is a route you build (a common pattern)</td><td>Paths or a separate Zap writing the event to a list (a common pattern); no dedicated dead-letter feature on the pages read</td></tr>
+    </table>
+    <p class="mono" style="margin-top:6px">n8n cells read in its docs and engine source. Make error-handler names (Skip, Retry, Resume, Commit, Rollback) read at source; Retry's ranges reported. Zapier Autoreplay read at source; its schedule is not on the page.</p>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 6</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li><strong>Sort every step of your own workflow</strong> into read, write with a key, or write with no key. Turn retries on for the first group, check the receiving API's docs for the second, and wire the third to a park step with no automatic retry.</li>
+      <li><strong>Read one provider's idempotency page</strong> for an app you write to. Write down three things: the header name, what a repeat returns (the first result, including a failure, or a fresh try), and how long keys are kept.</li>
+      <li><strong>Find where your tool keeps failed runs and for how long.</strong> n8n's executions list, Make's incomplete executions, Zapier's Zap history. If the answer is shorter than a long weekend, your dead-letter list needs to live somewhere else.</li>
+      <li><strong>Send yourself the alert from step 6</strong> through the channel you would really use, and ask: could someone who has never seen the workflow act on it in five minutes? If not, add what is missing.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and session 5 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · A colleague adds an Idempotency-Key header to the send step, with the value set to a new random UUID generated inside that step. The duplicates continue. Why?</p>
+      <button class="qopt" type="button">A · The receiver needs the key in the body, not the header</button>
+      <button class="qopt" type="button">B · UUIDs are too long to be used as keys</button>
+      <button class="qopt" type="button">C · Every retry generates a new key, so the receiver sees a different action each time and performs each one; the key must come from the event, such as its event id, so all attempts share it</button>
+      <button class="qopt" type="button">D · Idempotency keys only work on reads</button>
+      <p class="qwhy">A key names one intended action. If the name changes on every attempt, there is nothing for the receiver to match. Take it from the event, which existed before the first try and travels with every retry and redrive.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">2 · A workflow has an n8n Remove Duplicates node directly before the send. A send fails during an outage and the event is redriven that night. What happens, and what is the fix?</p>
+      <button class="qopt" type="button">A · The redrive sends twice; remove the dedupe node</button>
+      <button class="qopt" type="button">B · The redrive works normally, because a failed run does not record anything</button>
+      <button class="qopt" type="button">C · n8n refuses to save the workflow</button>
+      <button class="qopt" type="button">D · The event was marked seen before the send failed, so the redrive drops it as a repeat and the customer never hears; check before the send, and mark the event seen only after the send succeeds</button>
+      <p class="qwhy">"Seen" was recorded at the wrong moment. Marking after success keeps a failed event eligible for its second chance, and the run log of the dropped redrive shows nothing wrong at all.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="1">
+      <p class="qtext">3 · What does a dead-letter queue give you that more retries cannot?</p>
+      <button class="qopt" type="button">A · Faster delivery during normal hours</button>
+      <button class="qopt" type="button">B · A way to reach past an outage longer than any retry window, by keeping the failed event by name until it can be redriven, and a list a person can see and act on</button>
+      <button class="qopt" type="button">C · Protection against duplicates without a key</button>
+      <button class="qopt" type="button">D · A lower bill, because parked events are free</button>
+      <p class="qwhy">n8n's node retry tops out at 20 seconds and the bench's outage lasted 30 minutes. Only rung 4 texted all 344, by parking 13 events and redriving them. The redrive is safe only with the key, and the list is useful only if someone owns it.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">n8n node settings and engine source</span><span class="note">Retry On Fail, Max Tries, Wait Between Tries and On Error from n8n's docs; the 2 to 5 and 5,000 ms clamps read in n8n-core 2.41.6, workflow-execute.js, getRetryParams</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">n8n error workflow and Error Trigger</span><span class="note">Set per workflow, starts with Error Trigger, runs when an execution fails, not testable with manual runs, execution.retryOf on retries</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">n8n Remove Duplicates</span><span class="note">Operation, Value Is New, default history 10,000, node or workflow scope read at source; the before-the-send trap is reasoned from that behaviour</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Make error handlers</span><span class="note">Names and Retry's need for incomplete executions read at source; attempts 1 to 100 and minute intervals reported only</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Zapier Autoreplay</span><span class="note">Replays the errored step on Professional and above, read at source; its retry schedule is not stated</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Stripe API docs, "Idempotent requests"</span><span class="note">Header, stored result including 500 errors, 255 characters, pruning after at least 24 hours, no personal data in keys</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">AWS, "Using dead-letter queues in Amazon SQS"</span><span class="note">Purpose, maxReceiveCount, redrive, longer retention, alarms</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Brooker, M. "Exponential Backoff And Jitter." AWS Architecture Blog, 4 March 2015</span><span class="note">Full jitter lowest client work; jitter more than halved calls with 100 clients; backoff.py implements full jitter</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">GitHub Docs, "Best practices for using webhooks" and Stripe docs, "Webhooks"</span><span class="note">10-second answer, redelivery keeps X-GitHub-Delivery; Stripe retries up to three days and may deliver an event more than once</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Real n8n 2.41.6 runs against the mock endpoints</span><span class="note">Six events across four rungs, 24 of 24 matched the bench runner, plus 2 of 2 with the store off; the 23:30 redrive itself was not run on n8n</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Session 5 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Reads freely, writes only with a key</b><span>A timeout cannot tell "never arrived" from "arrived, reply lost". A write with no key gets parked, not retried.</span></div>
+      <div class="cheat-item"><b>n8n node retry tops out at 20 s</b><span>Max Tries 2 to 5, a fixed wait of at most 5,000 ms, no jitter. Anything longer needs a park and a redrive.</span></div>
+      <div class="cheat-item"><b>Backoff with full jitter</b><span>Wait a random time between 0 and a doubling ceiling, capped. Brooker 2015: lowest client work of the variants compared.</span></div>
+      <div class="cheat-item"><b>The key comes from the event</b><span>Event id, same on every try and every redrive. A fresh random id per try protects nothing. Read the provider's rules: Stripe replays a stored 500.</span></div>
+      <div class="cheat-item"><b>Check before, mark after</b><span>A dedupe step before the send marks a failed event seen, and its redrive is dropped. Mark only after the send says yes.</span></div>
+      <div class="cheat-item"><b>A list, an owner, an alert</b><span>Error output to a park step; error workflow for the unexpected. Alert with event id, step, error, link and owner.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>Rung 4 works tonight. Session 6 asks what keeps it working in a year: who owns it, where its runbook lives, what happens when an API key expires or a Zap is turned off and its seen-id list quietly resets, and when an automation should be retired rather than repaired. You will run a review over a small inventory of five automations and find out which of them has no owner.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Session 5 of 6 · learn-automation-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="04-the-workflow-bench.html">← Prev: The workflow bench</a> &nbsp;·&nbsp; <a href="06-leave-it-running.html">Next: Leave it running →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- social:start -->
+<meta name="description" content="Session 4 of 6. A real n8n-format workflow runs over one seeded day of 600 webhook events with timeouts, 500 errors, lost replies and a 30-minute outage. Four rungs: no retry, retry everything, retry with an idempotency key, plus a dead-letter queue. Texts delivered, duplicates, losses, runs and cost per run, computed in your browser.">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Learn with Phoebe">
+<meta property="og:title" content="The workflow bench - learn automation with phoebe">
+<meta property="og:description" content="Session 4 of 6. One day, 344 orders, four rungs. Retry everything texts 11 customers twice; a key and a dead-letter queue text all 344 exactly once.">
+<meta property="og:url" content="https://phoebefu6.github.io/learn-automation-with-phoebe/courses/04-the-workwf-bench.html">
+<meta property="og:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The workflow bench - learn automation with phoebe">
+<meta name="twitter:description" content="Session 4 of 6. Four rungs on one seeded day, counted live.">
+<meta name="twitter:image" content="https://phoebefu6.github.io/learn-automation-with-phoebe/assets/og-cover.png">
+<!-- social:end -->
+<title>Session 4 · The workflow bench - learn automation with phoebe</title>
+<link rel="stylesheet" href="../assets/style.css?v=1">
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="wrap">
+    <span class="crumb"><a href="../index.html">learn-automation-with-phoebe</a> / Session 4 of 6</span>
+    <button class="btn" id="toggle-all" type="button">Expand all</button>
+    <button class="btn primary" id="zoom-toggle" type="button">Projector zoom: off</button>
+  </div>
+</div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="eyebrow">Learn Automation with Phoebe · Session 4 of 6</div>
+    <h1>The workflow <span class="accent">bench</span></h1>
+    <p class="sub">Sessions 1 to 3 argued about what to automate and what it costs. Tonight a workflow runs. The same five-node n8n workflow you imported in session 2 processes one seeded day of 600 webhook events, 344 of them orders that should each produce exactly one text message. The day contains the four things that go wrong in real automations: a lookup that times out, a 500 error, a message that is sent but whose reply never arrives, and a provider that is down for half an hour. Four versions of the workflow run in front of you, from no retry to a dead-letter queue, and the page counts every text sent, every duplicate, every order lost and every run billed.</p>
+    <div class="chip-row">
+      <span class="chip level">🔴 Bench night</span>
+      <span class="chip audience">Bring your session 3 pricing</span>
+      <span class="chip audience">No code tonight, all clicking</span>
+      <span class="chip time">45 min</span>
+    </div>
+    <div class="agenda">
+      <span class="a1" style="flex:1">0-3 · Welcome</span>
+      <span class="a2" style="flex:3">3-14 · How to read the bench</span>
+      <span class="a3" style="flex:6">14-40 · Four rungs and a break button</span>
+      <span class="a4" style="flex:1">40-45 · Q&amp;A</span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="section" id="intro">
+    <div class="section-kicker">
+      <span class="klabel">Part 0</span>
+      <h2>Where we start</h2>
+    </div>
+    <p class="lede">A bench holds everything still except the thing you are testing. The day is fixed: 600 events between 07:00 and 22:00, seed 1205, with every failure decided by a hash of the event, the step and the attempt number, so the same failure hits the same order on every replay. The workflow is real n8n JSON. What changes between rungs is three node settings and one header, and the bench reads them from the JSON rather than pretending.</p>
+
+    <div class="legend">
+      <span class="pill">🎫 Clear all three quiz questions to stamp your passport</span>
+      <span class="pill">measured = counted from the runs</span>
+      <span class="pill">declared = the failure mix, printed on the widget</span>
+      <span class="pill">mapped = a vendor's billing rule applied to this workflow</span>
+    </div>
+
+    <div class="callout win">
+      <p><strong>★ What you walk out with tonight.</strong> The measured cost of each rung on one hard day, the reason "retry everything" is the most dangerous fix in automation, proof that an idempotency key only works if the receiver keeps a store, and the per-run price of the same day on Zapier, Make and n8n.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-1">
+    <div class="section-kicker">
+      <span class="klabel">Part 1 · covers what the bench runs and what can fail</span>
+      <h2>One day, four ways to fail</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The workflow is the one from session 2. A webhook receives an event. An IF node lets only orders through. A Set node shapes the message. An HTTP Request looks the customer up in the CRM to get a phone number, and a second HTTP Request sends the text. Two of those five steps talk to another company's server, and those two are where every failure on the bench is injected.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The bench workflow sketched as five boxes in a row: Order webhook, Is it an order, Shape the message, Look up customer, Send the SMS. Signups and refunds leave at the IF node with no action. Above the lookup, its injected failures: timeout 2 percent, 500 error 3 percent of tries. Above the send: 500 error 3 percent, sent but reply lost 4 percent, 503 during the 13:00 to 13:30 outage. On rung 4 only, both HTTP steps have an error output into a dead-letter queue box that is redriven at 23:30.">
+        <defs>
+          <filter id="s4aSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="53" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s4aHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".5"/></pattern>
+          <marker id="s4aAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s4aH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s4aL { font: 700 12px Inter, sans-serif; fill: #11233B; }
+          .s4aS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s4aB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s4aN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s4aH" x="24" y="26">THE WORKFLOW ON THE BENCH</text>
+        <text class="s4aS" x="230" y="26">real n8n JSON, five nodes, one execution per incoming event</text>
+
+        <g filter="url(#s4aSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="24" y="118" width="140" height="50" rx="10" transform="rotate(-0.6 94 143)" fill="#EBF3FD"/>
+          <rect x="192" y="118" width="140" height="50" rx="10" transform="rotate(0.5 262 143)" fill="#FFFFFF"/>
+          <rect x="360" y="118" width="140" height="50" rx="10" transform="rotate(-0.4 430 143)" fill="#FFFFFF"/>
+          <rect x="528" y="118" width="140" height="50" rx="10" transform="rotate(0.6 598 143)" fill="url(#s4aHc)"/>
+          <rect x="696" y="118" width="140" height="50" rx="10" transform="rotate(-0.5 766 143)" fill="#FDEEE4" stroke="#B5480C"/>
+          <path d="M166 143 L188 143" marker-end="url(#s4aAr)"/>
+          <path d="M334 143 L356 143" marker-end="url(#s4aAr)"/>
+          <path d="M502 143 L524 143" marker-end="url(#s4aAr)"/>
+          <path d="M670 143 L692 143" marker-end="url(#s4aAr)"/>
+          <!-- IF false branch -->
+          <path d="M262 170 L262 200" stroke="#4D5D74" stroke-dasharray="5 5" marker-end="url(#s4aAr)"/>
+          <!-- lightning marks on the two HTTP steps -->
+          <path d="M598 112 L590 100 L602 100 L594 86" stroke="#B5480C"/>
+          <path d="M766 112 L758 100 L770 100 L762 86" stroke="#B5480C"/>
+          <!-- error outputs to the dead-letter queue (rung 4) -->
+          <path d="M598 170 L640 244" stroke="#4D5D74" stroke-dasharray="6 5" marker-end="url(#s4aAr)"/>
+          <path d="M766 170 L724 244" stroke="#4D5D74" stroke-dasharray="6 5" marker-end="url(#s4aAr)"/>
+          <rect x="562" y="250" width="240" height="46" rx="10" transform="rotate(0.4 682 273)" fill="#FFFFFF" stroke="#0A4A92"/>
+        </g>
+
+        <text class="s4aL" x="36" y="140">Order webhook</text>
+        <text class="s4aS" x="36" y="156">webhook trigger</text>
+        <text class="s4aL" x="204" y="140">Is it an order?</text>
+        <text class="s4aS" x="204" y="156">IF, type = order</text>
+        <text class="s4aL" x="372" y="140">Shape message</text>
+        <text class="s4aS" x="372" y="156">Set, three fields</text>
+        <text class="s4aL" x="540" y="140">Look up customer</text>
+        <text class="s4aS" x="540" y="156">HTTP GET, CRM</text>
+        <text class="s4aL" x="708" y="140">Send the SMS</text>
+        <text class="s4aS" x="708" y="156">HTTP POST, provider</text>
+
+        <text class="s4aS" x="192" y="222">signups and refunds:</text>
+        <text class="s4aS" x="192" y="238">256 events, no action</text>
+
+        <text class="s4aB" x="528" y="54">timeout 2%</text>
+        <text class="s4aB" x="528" y="70">500 error 3%</text>
+        <text class="s4aB" x="696" y="40">500 error 3%</text>
+        <text class="s4aB" x="696" y="56">sent, reply lost 4%</text>
+        <text class="s4aB" x="696" y="72">503, 13:00-13:30</text>
+
+        <text class="s4aL" x="576" y="270">Dead-letter queue</text>
+        <text class="s4aS" x="576" y="286">rung 4 only · redriven 23:30</text>
+
+        <text class="s4aN" x="24" y="324">Two steps leave the building. Every failure on the bench happens at one of them, per try, decided by a hash.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the rust box is the only step whose failure can be invisible: the text goes out and the reply does not come back</figcaption>
+    </figure>
+
+    <details class="card" open>
+      <summary><span class="mode live">Live</span>The four failures, and the one that lies<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p><strong>Timeout on the lookup (2% of tries).</strong> The CRM does not answer within the node's 10-second timeout. Nothing happened on the other side; trying again is safe.</p>
+        <p><strong>500 errors (3% of tries at each HTTP step).</strong> The server says it failed before doing anything. On the SMS step, nothing was sent. Trying again is safe.</p>
+        <p><strong>Sent, reply lost (4% of tries at the SMS step).</strong> The provider sends the text, then the response is lost on the way back. The workflow sees exactly what it sees for a timeout, and n8n reports it as a failure. The customer has the text. <strong>This is the one that lies</strong>: the run is red and the work is done. Trying again is not safe unless something tells the provider it is the same message.</p>
+        <p><strong>The outage (13:00 to 13:30).</strong> Every send for an order that arrives in those thirty minutes gets a 503. Thirteen orders arrive in the window. Any number of retries seconds apart will hit the same closed door.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>What the runner implements, and how it was checked against real n8n<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>The bench is a small workflow runner written for this page. It reads n8n's own JSON for five node types (webhook, IF, Set, HTTP Request, and the HTTP Request used as the dead-letter step) and implements the settings that matter here with n8n's semantics: <code>retryOnFail</code>, <code>maxTries</code>, <code>waitBetweenTries</code> and <code>onError</code>. The retry limits are n8n's own, read in its engine source (n8n-core 2.41.6, <code>getRetryParams</code>): max tries clamped between 2 and 5, default 3; wait between tries clamped to at most 5,000 ms. Expressions are limited to the two forms the workflows use, <code>$json.field</code> and <code>$('Node name').item.json.field</code>.</p>
+        <p>Before any number on this page was written, the same four workflows were imported into a real n8n 2.41.6 (Node 24) and run against a local copy of the mock endpoints for six events chosen to hit every failure path. All 24 runs matched the bench's prediction on run status, texts sent and dead-letter entries, and so did the two break-button runs. An independent Python implementation agrees with the browser on every count, for every rung, every failure switch and both store settings. The workflow files are <a href="../assets/workflows/rung-1.json">rung-1</a>, <a href="../assets/workflows/rung-2.json">rung-2</a>, <a href="../assets/workflows/rung-3.json">rung-3</a> and <a href="../assets/workflows/rung-4.json">rung-4</a>.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="section" id="demo-1">
+    <div class="section-kicker">
+      <span class="klabel">Build-along · the bench</span>
+      <h2>Four rungs, computed in front of you</h2>
+      <span class="tag demo">★ 26 min · the main event</span>
+    </div>
+    <p class="lede">Work down the rungs in order. For each, read the verdict line, then the six counters, then "Where the day went". The second rung is the anti-lever: it is the fix most people reach for first, and the bench shows what it costs. Then break the fourth rung on purpose.</p>
+
+    <div id="wf-bench"></div>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The bench's controls as a hand-drawn panel: four rung cards in a row, the second one marked as the anti-lever; under them two groups of switches, failures injected and price it as; a break button; and the six counters the run produces.">
+        <defs>
+          <filter id="s4dSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="71" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <marker id="s4dAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s4dH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s4dL { font: 700 11.5px Inter, sans-serif; fill: #11233B; }
+          .s4dS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s4dB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s4dN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s4dSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="30" y="50" width="190" height="44" rx="8" fill="#FFFFFF"/>
+          <rect x="236" y="50" width="190" height="44" rx="8" fill="#FDEEE4" stroke="#B5480C"/>
+          <rect x="442" y="50" width="190" height="44" rx="8" fill="#FFFFFF"/>
+          <rect x="648" y="50" width="200" height="44" rx="8" fill="#EBF3FD"/>
+          <rect x="30" y="118" width="300" height="56" rx="8" fill="#FFFFFF"/>
+          <rect x="346" y="118" width="250" height="56" rx="8" fill="#FFFFFF"/>
+          <rect x="612" y="124" width="236" height="44" rx="22" fill="#FDEEE4" stroke="#B5480C"/>
+          <path d="M440 176 L440 196" marker-end="url(#s4dAr)"/>
+        </g>
+
+        <text class="s4dH" x="30" y="36">PICK A RUNG, SET THE DAY, READ THE COUNTERS</text>
+        <text class="s4dL" x="44" y="77">1 · No retry</text>
+        <text class="s4dB" x="250" y="77">2 · Retry everything</text>
+        <text class="s4dL" x="456" y="77">3 · + idempotency key</text>
+        <text class="s4dL" x="662" y="77">4 · + dead-letter queue</text>
+        <text class="s4dL" x="44" y="142">Failures injected</text>
+        <text class="s4dS" x="44" y="160">four switches, all on to start</text>
+        <text class="s4dL" x="360" y="142">Price it as</text>
+        <text class="s4dS" x="360" y="160">Zapier · Make · n8n</text>
+        <text class="s4dB" x="730" y="150" text-anchor="middle">break: store off</text>
+        <text class="s4dS" x="30" y="218">texted · duplicates · lost · runs · units · cost per run, each tagged measured or mapped</text>
+
+        <text class="s4dN" x="30" y="240">Change one thing at a time. The day never changes, so whatever moved, you moved it.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the rust card is the anti-lever and the rust pill is the break button; both exist to make a number get worse</figcaption>
+    </figure>
+
+    <div class="steps">
+      <div class="step">
+        <p><strong>Rung 1, no retry.</strong> Leave every failure on and the price on n8n. Read the counters before anything else. Note that the red runs and the lost orders are different numbers, and ask why.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see</span>Orders texted      304 / 344
+Duplicate texts    0
+Orders lost        40
+Runs               600   (51 ended red, 0 were redrives)
+Units used         600 executions
+Cost per run       €0.0080   (€4.80 for the day)</div>
+      </div>
+      <div class="step">
+        <p><strong>Rung 2, retry everything.</strong> Retry On Fail is on for both HTTP steps: three tries, five seconds apart. Losses fall from 40 to 13. Read the second counter.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see</span>Orders texted      331 / 344
+Duplicate texts    11
+Orders lost        13
+Runs               600   (13 ended red)
+Texted twice: evt_0101, evt_0111, evt_0112 and 8 more, listed under the counters</div>
+      </div>
+      <div class="step">
+        <p><strong>Prove where the duplicates come from.</strong> Still on rung 2, switch off "SMS sent but the reply is lost". Duplicates go to zero and nothing else about losses changes. Switch it back on before moving on.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see</span>ack-lost OFF:  texted 331 / 344 · duplicates 0  · lost 13
+ack-lost ON:   texted 331 / 344 · duplicates 11 · lost 13</div>
+      </div>
+      <div class="step">
+        <p><strong>Rung 3, the idempotency key.</strong> The SMS step now sends a header, <code>Idempotency-Key</code>, set to the event id. Same retries. The provider remembers keys it has seen and answers a repeat without sending again.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see</span>Orders texted      331 / 344
+Duplicate texts    0
+Orders lost        13    (the outage orders: no retry reaches past 30 minutes)</div>
+      </div>
+      <div class="step">
+        <p><strong>Rung 4, plus a dead-letter queue.</strong> Both HTTP steps now send their failures to an error output that parks the event on a list instead of stopping the run. At 23:30 the list is redriven once: each parked event goes through the workflow again.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see</span>Orders texted      344 / 344
+Duplicate texts    0
+Orders lost        0
+Runs               613   (0 ended red, 13 were redrives)
+Dead-letter list: 13 parked during the day, 0 still there after the redrive</div>
+      </div>
+      <div class="step">
+        <p><strong>Break it.</strong> On rung 4, press the break button. The workflow is unchanged and still sends the key. The provider's store of seen keys is switched off.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see</span>Orders texted      344 / 344
+Duplicate texts    13
+Orders lost        0
+Verdict: the idempotency store is off, so the key protects nothing</div>
+      </div>
+      <div class="step">
+        <p><strong>Price the day three ways.</strong> Mend the store, stay on rung 4, and switch "Price it as" between Zapier, Make and n8n. Then do the same on rung 1. Write the six numbers down for session 6.</p>
+        <div class="prompt-box good"><span class="label">★ What you should see</span>                 rung 1 (no retry)          rung 4 (+ dead-letter)
+Zapier tasks     621   $24.83  $0.0414/run   714   $28.55  $0.0466/run
+Make credits     1616  $1.45   $0.0024/run   1766  $1.59   $0.0026/run
+n8n executions   600   €4.80   €0.0080/run   613   €4.90   €0.0080/run</div>
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <p><strong>Read the tags.</strong> The first four counters are measured: count the delivery log yourself and you get the same numbers. Units and cost per run are mapped: they apply each vendor's published billing rule to this workflow, and the cost divides a plan price by its included units. The ordering it shows is robust; the cents are a comparison device, not a quote.</p>
+    </div>
+  </section>
+
+  <section class="section" id="part-2">
+    <div class="section-kicker">
+      <span class="klabel">Part 2 · covers what the ladder finds</span>
+      <h2>Same day, four answers</h2>
+      <span class="tag concept">6 min live</span>
+    </div>
+    <p class="lede">The bench above computes these live; the numbers here are the ones it produces on the seeded day, written down so they can be argued with after class. Every rung is the one before it plus one change.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hand-drawn bars for five runs of the same day. Duplicate texts: rung 1 no retry 0, rung 2 retry everything 11, rung 3 with an idempotency key 0, rung 4 with a dead-letter queue 0, rung 4 with the store switched off 13. Orders lost: 40, 13, 13, 0, 0. Orders texted out of 344: 304, 331, 331, 344, 344.">
+        <defs>
+          <filter id="s4bSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="59" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <pattern id="s4bHc" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(-38)"><line x1="0" y1="0" x2="0" y2="7" stroke="#0A64C4" stroke-width="1" opacity=".55"/></pattern>
+        </defs>
+        <style>
+          .s4bH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s4bL { font: 600 12px Inter, sans-serif; fill: #11233B; }
+          .s4bS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s4bB { font: 800 13px Inter, sans-serif; fill: #8A3509; }
+          .s4bV { font: 800 13px Inter, sans-serif; fill: #0A4A92; }
+          .s4bA { font: 700 11px Inter, sans-serif; fill: #0A64C4; letter-spacing: .05em; }
+          .s4bN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <text class="s4bH" x="30" y="26">ONE DAY, FIVE RUNS</text>
+        <text class="s4bS" x="170" y="26">all four failures on · bar length: 5 px per order</text>
+        <text class="s4bA" x="270" y="58">DUPLICATE TEXTS</text>
+        <text class="s4bA" x="530" y="58">ORDERS LOST</text>
+        <text class="s4bA" x="770" y="58">TEXTED</text>
+
+        <g filter="url(#s4bSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <!-- duplicates: row y = 80, 130, 180, 230, 280 -->
+          <rect x="270" y="134" width="55" height="26" rx="4" fill="#FDEEE4" stroke="#B5480C"/>
+          <rect x="270" y="284" width="65" height="26" rx="4" fill="#FDEEE4" stroke="#B5480C"/>
+          <!-- lost -->
+          <rect x="530" y="84" width="200" height="26" rx="4" fill="url(#s4bHc)"/>
+          <rect x="530" y="134" width="65" height="26" rx="4" fill="url(#s4bHc)"/>
+          <rect x="530" y="184" width="65" height="26" rx="4" fill="url(#s4bHc)"/>
+          <!-- baselines -->
+          <path d="M268 74 L268 316" stroke="#C7D4E5"/>
+          <path d="M528 74 L528 316" stroke="#C7D4E5"/>
+        </g>
+
+        <text class="s4bL" x="250" y="102" text-anchor="end">1 · No retry</text>
+        <text class="s4bB" x="250" y="152" text-anchor="end">2 · Retry everything</text>
+        <text class="s4bL" x="250" y="202" text-anchor="end">3 · + idempotency key</text>
+        <text class="s4bL" x="250" y="252" text-anchor="end">4 · + dead-letter queue</text>
+        <text class="s4bL" x="250" y="302" text-anchor="end">4, store switched off</text>
+
+        <text class="s4bV" x="280" y="102">0</text>
+        <text class="s4bB" x="333" y="152">11</text>
+        <text class="s4bV" x="280" y="202">0</text>
+        <text class="s4bV" x="280" y="252">0</text>
+        <text class="s4bB" x="343" y="302">13</text>
+
+        <text class="s4bV" x="738" y="102">40</text>
+        <text class="s4bV" x="603" y="152">13</text>
+        <text class="s4bV" x="603" y="202">13</text>
+        <text class="s4bV" x="540" y="252">0</text>
+        <text class="s4bV" x="540" y="302">0</text>
+
+        <text class="s4bL" x="790" y="102">304</text>
+        <text class="s4bL" x="790" y="152">331</text>
+        <text class="s4bL" x="790" y="202">331</text>
+        <text class="s4bL" x="790" y="252">344</text>
+        <text class="s4bL" x="790" y="302">344</text>
+
+        <text class="s4bN" x="30" y="342">Retrying trades losses for duplicates. The key takes the duplicates back. Only the queue reaches the outage.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - the two rust bars are the same mechanism: a reply that was lost, and a step that was tried again with nothing to say it was a repeat</figcaption>
+    </figure>
+
+    <table class="clean">
+      <tr><th>Rung</th><th>Texted</th><th>Duplicates</th><th>Lost</th><th>Runs</th><th>Red runs</th><th>Zapier tasks</th><th>Make credits</th><th>n8n executions</th></tr>
+      <tr><td>1 · No retry</td><td>304 / 344</td><td>0</td><td><strong>40</strong></td><td>600</td><td>51</td><td>621</td><td>1,616</td><td>600</td></tr>
+      <tr><td><strong>2 · Retry everything</strong></td><td>331 / 344</td><td><strong>11</strong></td><td>13</td><td>600</td><td>13</td><td>675</td><td>1,697</td><td>600</td></tr>
+      <tr><td>3 · + idempotency key</td><td>331 / 344</td><td>0</td><td>13</td><td>600</td><td>13</td><td>675</td><td>1,697</td><td>600</td></tr>
+      <tr><td>4 · + dead-letter queue</td><td><strong>344 / 344</strong></td><td>0</td><td><strong>0</strong></td><td>613</td><td>0</td><td>714</td><td>1,766</td><td>613</td></tr>
+      <tr><td>4 · store switched off</td><td>344 / 344</td><td><strong>13</strong></td><td>0</td><td>613</td><td>0</td><td>714</td><td>1,766</td><td>613</td></tr>
+    </table>
+    <p class="mono" style="margin-top:6px">Texted, duplicates, lost and runs are counted from the runs. The three unit columns apply each vendor's billing rule to this workflow, which is mapped.</p>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>Finding 1: red is not lost, and green is not delivered<span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>On rung 1, 51 runs end red and 40 orders are lost. The other 11 red runs are lost replies: the provider sent the text and the workflow never heard back, so n8n marked the run failed. If someone "fixes" those 11 by replaying them from the executions list, 11 customers get a second text. The executions list tells you which runs failed; it does not tell you what happened on the other side. Only the receiver's log does.</p>
+        <p>The reverse is also true on rung 2: runs that end green include the 11 that sent twice. A green run means the workflow finished, not that the customer got exactly one message.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>Finding 2: retry everything trades losses for duplicates<span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Turning Retry On Fail on for every HTTP step is the reflex fix, and it works on the failures it was meant for: losses fall from 40 to 13. But it also retries the step whose reply was lost, and nothing in the second request says "this is the same message". The provider sends it again. Eleven customers are texted twice.</p>
+        <p>The proof is the switch: with lost replies switched off, rung 2 has zero duplicates. The retry is not the problem. Retrying a step that has side effects, without an identity for the side effect, is. A lookup can be retried freely, because asking the CRM twice changes nothing; a send cannot.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>Finding 3: no retry setting reaches past an outage<span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Rungs 2 and 3 both lose the same 13 orders: the ones that arrived during the outage. n8n caps a node's retries at 5 tries with at most 5 seconds between them, so the longest a node-level retry can wait is 20 seconds. The outage lasts 30 minutes. Raising the retry count would not help even if the cap allowed it; it would only hit the closed door faster. What reaches past an outage is a place to put the work and a later attempt: the dead-letter queue and its redrive.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>Finding 4: the same day costs three different shapes of money<span class="mini">3 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>n8n bills per execution: 600 runs cost 600 units whether a run had one step or forty retries, so its cost per run stays at €0.0080 on every rung; only the 13 redrives add anything. Zapier bills per successful action: failed steps are free, so rung 1, where the most steps fail, uses the fewest tasks (621), and the dead-letter rung uses the most (714) because every parked event and every redrive succeeds at something. Make bills per module run, trigger included; the bench assumes a failed module run still uses a credit, because the Make pages read for this build do not say either way.</p>
+        <p>At 714 tasks a day, the Zapier version of this workflow needs about 21,000 tasks a month against a 750-task entry plan. The per-unit price shown is the entry plan divided by its tasks; at that volume a real bill sits on a much larger tier. Session 3 has the tier tables. The point the bench makes is the shape: on per-step billing, reliability costs units; on per-run billing, it mostly does not.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="section" id="part-3">
+    <div class="section-kicker">
+      <span class="klabel">Part 3 · covers the break button</span>
+      <h2>The key is a promise the receiver keeps</h2>
+      <span class="tag concept">4 min live</span>
+    </div>
+    <p class="lede">An idempotency key looks like something the workflow does: it adds a header. It is really something the receiver does: it remembers the key and refuses to do the work twice. The break button leaves the workflow untouched and switches the receiver's memory off, and the duplicates come straight back.</p>
+
+    <figure class="zoomable">
+      <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two hand-drawn sequence diagrams for order evt_0101. Left, store on: n8n posts the text with key evt_0101, the provider sends text 1 and stores the key, the reply is lost, n8n waits 5 seconds and posts again with the same key, the provider sees the key and answers 200 without sending. One text. Right, store off: the same two posts, but the second one sends text 2. The run is green both times; the customer is texted once on the left and twice on the right.">
+        <defs>
+          <filter id="s4cSk" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="61" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <marker id="s4cAr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M1 1 L9 5 L1 9" fill="none" stroke="#11233B" stroke-width="1.6" stroke-linecap="round"/></marker>
+        </defs>
+        <style>
+          .s4cH { font: 800 12px Inter, sans-serif; fill: #11233B; }
+          .s4cL { font: 600 11.5px Inter, sans-serif; fill: #11233B; }
+          .s4cS { font: 400 11px Inter, sans-serif; fill: #4D5D74; }
+          .s4cB { font: 800 11px Inter, sans-serif; fill: #8A3509; }
+          .s4cR { font: 800 11px Inter, sans-serif; fill: #991B1B; }
+          .s4cV { font: 800 12px Inter, sans-serif; fill: #0A4A92; }
+          .s4cN { font: 400 12px Inter, sans-serif; fill: #4D5D74; }
+        </style>
+
+        <g filter="url(#s4cSk)" fill="none" stroke="#11233B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="24" y="40" width="420" height="262" rx="12" transform="rotate(-0.3 234 171)" fill="#FFFFFF" stroke="#0A64C4"/>
+          <rect x="456" y="40" width="420" height="262" rx="12" transform="rotate(0.3 666 171)" fill="#FEF2F2" stroke="#FCA5A5"/>
+          <!-- lifelines -->
+          <path d="M70 84 L70 270" stroke="#C7D4E5"/>
+          <path d="M320 84 L320 270" stroke="#C7D4E5"/>
+          <path d="M502 84 L502 270" stroke="#C7D4E5"/>
+          <path d="M752 84 L752 270" stroke="#C7D4E5"/>
+          <!-- left messages -->
+          <path d="M72 110 L316 110" marker-end="url(#s4cAr)"/>
+          <path d="M318 160 L74 160" stroke-dasharray="6 6"/>
+          <path d="M72 216 L316 216" marker-end="url(#s4cAr)"/>
+          <path d="M318 256 L74 256" marker-end="url(#s4cAr)"/>
+          <!-- right messages -->
+          <path d="M504 110 L748 110" marker-end="url(#s4cAr)"/>
+          <path d="M750 160 L506 160" stroke-dasharray="6 6"/>
+          <path d="M504 216 L748 216" marker-end="url(#s4cAr)"/>
+          <path d="M750 256 L506 256" marker-end="url(#s4cAr)"/>
+        </g>
+
+        <text class="s4cH" x="40" y="62">STORE ON</text>
+        <text class="s4cH" x="472" y="62">STORE OFF · the break button</text>
+        <text class="s4cS" x="70" y="80" text-anchor="middle">n8n</text>
+        <text class="s4cS" x="320" y="80" text-anchor="middle">provider</text>
+        <text class="s4cS" x="502" y="80" text-anchor="middle">n8n</text>
+        <text class="s4cS" x="752" y="80" text-anchor="middle">provider</text>
+
+        <text class="s4cL" x="195" y="103" text-anchor="middle">POST, key evt_0101</text>
+        <text class="s4cV" x="330" y="128">text 1 sent</text>
+        <text class="s4cS" x="330" y="142">key stored</text>
+        <text class="s4cB" x="195" y="153" text-anchor="middle">reply lost: timeout</text>
+        <text class="s4cS" x="195" y="190" text-anchor="middle">wait 5 s, try 2</text>
+        <text class="s4cL" x="195" y="209" text-anchor="middle">same POST, same key</text>
+        <text class="s4cV" x="330" y="234">key seen,</text>
+        <text class="s4cS" x="330" y="248">nothing sent</text>
+        <text class="s4cL" x="195" y="249" text-anchor="middle">200 OK</text>
+        <text class="s4cV" x="40" y="290">run green · customer texted once</text>
+
+        <text class="s4cL" x="627" y="103" text-anchor="middle">POST, key evt_0101</text>
+        <text class="s4cV" x="762" y="128">text 1 sent</text>
+        <text class="s4cS" x="762" y="142">key ignored</text>
+        <text class="s4cB" x="627" y="153" text-anchor="middle">reply lost: timeout</text>
+        <text class="s4cS" x="627" y="190" text-anchor="middle">wait 5 s, try 2</text>
+        <text class="s4cL" x="627" y="209" text-anchor="middle">same POST, same key</text>
+        <text class="s4cR" x="762" y="234">text 2 sent</text>
+        <text class="s4cS" x="762" y="248">twice</text>
+        <text class="s4cL" x="627" y="249" text-anchor="middle">200 OK</text>
+        <text class="s4cR" x="472" y="290">run green · customer texted twice</text>
+
+        <text class="s4cN" x="24" y="326">Identical workflow, identical header. The only difference is whether the other side remembers.</text>
+      </svg>
+      <figcaption>🔍 Click to zoom - both runs end green, which is why the executions list can never tell these two apart</figcaption>
+    </figure>
+
+    <details class="card">
+      <summary><span class="mode live">Live</span>What "idempotent" has to mean for a step with side effects<span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>A step is idempotent when doing it twice leaves the world the same as doing it once. Reading is idempotent by nature. Sending a text, charging a card or creating a record is not, unless the receiver makes it so. Stripe's API is the textbook version: send an <code>Idempotency-Key</code> header and Stripe saves the result of the first request for that key, then returns the same result to any repeat. Your key choice matters: the bench uses the event id, because the event is the thing that must happen once. A random id generated fresh on every try would be a different key each time and protect nothing.</p>
+        <p>The break button is the test every idempotency claim should pass: switch off the store and the duplicates must reappear. If they do not, the bench was not measuring what you thought.</p>
+      </div>
+    </details>
+
+    <details class="card">
+      <summary><span class="mode self">Self-study</span>When the receiver keeps no store<span class="mini">2 min</span><span class="caret">▶</span></summary>
+      <div class="body">
+        <p>Many APIs a no-code workflow calls have no idempotency key at all: a chat message, a spreadsheet row, most email sends. Then the store has to live on your side. Write "sent: evt_0101" somewhere durable after the send succeeds, and check it before sending. n8n's Remove Duplicates node can keep that memory across executions (operation "Remove Items Processed in Previous Executions"), and session 5 shows the trap in it: placed before the send, it marks the event seen before the send has succeeded, so a failed send that is redriven later is silently dropped. Either check before and mark after, or accept the receiver's memory where it exists.</p>
+      </div>
+    </details>
+
+    <div class="callout example">
+      <span class="ex-pill">Real world</span>
+      <p><strong>Webhook senders deliver more than once on purpose.</strong> Stripe's webhook documentation says endpoints "might occasionally receive the same event more than once" and tells you to log the event ids you have processed; it retries undelivered events for up to three days. GitHub's webhook best practices ask for a 2XX within 10 seconds and note that a redelivery carries the same <code>X-GitHub-Delivery</code> header. Both are telling you the same thing the bench shows from the other side: delivery is at least once, so exactly once has to be built.</p>
+    </div>
+  </section>
+
+  <section class="section" id="exercise">
+    <div class="section-kicker">
+      <span class="klabel">Homework</span>
+      <h2>Before session 5</h2>
+      <span class="tag exercise">30 min</span>
+    </div>
+    <ol>
+      <li><strong>Fill the five-row table for your own candidate</strong> from session 1. For each step, write whether it is safe to retry (a read) or has a side effect (a send, a create, a charge).</li>
+      <li><strong>Find out whether your receiving app accepts an idempotency key.</strong> Search its API docs for "idempotency". If it does not, write down where your own "already sent" record would live.</li>
+      <li><strong>Switch off one failure at a time on rung 1</strong> and record which counter moves. You should be able to say, for each of the four failures, which rung fixes it.</li>
+      <li><strong>Price your own workflow</strong> with the session 3 calculator at the volume you expect, on the rung you intend to build. That number goes into session 6's inventory.</li>
+    </ol>
+  </section>
+
+  <section class="section" id="quiz">
+    <div class="section-kicker">
+      <span class="klabel">Check yourself</span>
+      <h2>Three questions</h2>
+    </div>
+    <p>Clear all three and session 4 gets stamped in your passport.</p>
+
+    <div class="quiz-q" data-answer="2">
+      <p class="qtext">1 · On rung 1, 51 runs end red but only 40 orders are lost. What are the other 11?</p>
+      <button class="qopt" type="button">A · Runs that failed at the IF node</button>
+      <button class="qopt" type="button">B · Signups and refunds, which are not orders</button>
+      <button class="qopt" type="button">C · Runs where the provider sent the text and the reply was lost: n8n marks them failed, the customer has the message, and replaying them would text 11 people twice</button>
+      <button class="qopt" type="button">D · A rounding difference between the browser and Python</button>
+      <p class="qwhy">A lost reply looks exactly like a timeout to the workflow. Red means the workflow did not hear success, not that nothing happened. Only the receiver's log can tell the two apart.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="0">
+      <p class="qtext">2 · Retry everything cuts losses from 40 to 13 and adds 11 duplicate texts. How does the bench prove where the duplicates come from?</p>
+      <button class="qopt" type="button">A · Switch off "sent but the reply is lost": duplicates fall to 0 while losses stay at 13, so every duplicate is a retried send whose first attempt had already worked</button>
+      <button class="qopt" type="button">B · Switch to Zapier pricing, which does not bill duplicates</button>
+      <button class="qopt" type="button">C · Raise max tries to 5</button>
+      <button class="qopt" type="button">D · It cannot; duplicates are random</button>
+      <p class="qwhy">Change one thing, watch one counter. The duplicates belong entirely to retries of a step with a side effect and no identity. Retrying the CRM lookup is harmless; retrying the send is not, until it carries a key.</p>
+    </div>
+
+    <div class="quiz-q" data-answer="3">
+      <p class="qtext">3 · Rung 3 still loses 13 orders, all from the 13:00-13:30 outage. Why would raising the retries not save them?</p>
+      <button class="qopt" type="button">A · Because the idempotency key blocks the retries</button>
+      <button class="qopt" type="button">B · Because n8n does not retry 503 errors</button>
+      <button class="qopt" type="button">C · Because outages are not real failures</button>
+      <button class="qopt" type="button">D · n8n caps node retries at 5 tries and 5 seconds apart, a 20-second window against a 30-minute outage; what reaches past it is parking the event and trying again later, which is rung 4's dead-letter queue and redrive</button>
+      <p class="qwhy">Retries are for blips. Outages need a place to put the work and a second attempt after the door reopens. On rung 4 the 13 orders are parked, redriven at 23:30 and texted, and the key makes the redrive safe.</p>
+    </div>
+
+    <p class="quiz-score"></p>
+  </section>
+
+  <section class="section" id="official">
+    <div class="section-kicker">
+      <span class="klabel">Sources covered</span>
+      <h2>What this session teaches, and where it came from</h2>
+    </div>
+    <div class="covered">
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">n8n node settings: Retry On Fail, Max Tries, Wait Between Tries, On Error</span><span class="note">Documented settings read in n8n's docs; the 2-to-5 tries clamp and 5,000 ms wait cap read in the engine source of n8n-core 2.41.6</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">The bench runner against real n8n</span><span class="note">24 of 24 runs on n8n 2.41.6 matched the runner on status, texts and dead-letter entries, plus both break-button runs; Python and browser agree on every count</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">Stripe idempotent requests and webhook duplicates</span><span class="note">Read at source in Stripe's API and webhook docs</span></div>
+      <div class="covered-row"><span class="status pill solid">✓</span><span class="name">GitHub webhook best practices</span><span class="note">The 10-second response and the unchanged delivery header on redelivery, read at source</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">Billing per task, credit and execution</span><span class="note">Each vendor's rule from its pricing and help pages, applied to this workflow; whether Make bills a failed module run is not stated in the pages read, and the bench assumes it does</span></div>
+      <div class="covered-row"><span class="status pill light">◐</span><span class="name">The seeded day and its failure mix</span><span class="note">Constructed and declared on the widget; real systems fail in other proportions, and only the mechanisms transfer</span></div>
+    </div>
+    <p class="mono" style="margin-top:14px">Every fact on this page, and its verification tier, is recorded in the course's source map.</p>
+  </section>
+
+  <section class="cheat" id="cheatsheet">
+    <h3>Session 4 cheat sheet <span>· pin this</span></h3>
+    <div class="grid-2">
+      <div class="cheat-item"><b>Red is not lost</b><span>A lost reply ends red after the work is done. 51 red runs, 40 lost orders.</span></div>
+      <div class="cheat-item"><b>Retry everything = duplicates</b><span>0 to 11 duplicates on one day, all from retried sends whose reply was lost.</span></div>
+      <div class="cheat-item"><b>Reads retry free, writes need a key</b><span>Asking twice changes nothing; sending twice texts twice.</span></div>
+      <div class="cheat-item"><b>The key lives in the receiver</b><span>Store off, key on: 13 duplicates. Test every key with the store switched off.</span></div>
+      <div class="cheat-item"><b>Retries cover seconds, queues cover outages</b><span>n8n's node retries top out at 20 seconds. Park the event and redrive it.</span></div>
+      <div class="cheat-item"><b>Per run vs per step</b><span>n8n €0.0080 a run on every rung; Zapier tasks rise 621 to 714 as reliability rises.</span></div>
+    </div>
+  </section>
+
+  <div class="callout next">
+    <span class="nx-pill">Next session</span>
+    <p>The bench showed what each rung does. Session 5 builds them: how to set retries and backoff in Zapier, Make and n8n, where the idempotency key goes and what to do when the receiving app has none, how to build a dead-letter list you will actually look at, and how to get an alert that says which order failed rather than "a workflow failed". Bring the rung you chose.</p>
+  </div>
+
+  <footer class="pagefoot">
+    <span>Session 4 of 6 · learn-automation-with-phoebe · by Phoebe Fu &nbsp;·&nbsp; 📚 <a href="https://phoebefu6.github.io/learn-with-phoebe/">Learn with Phoebe ↗</a></span>
+    <span><a href="03-zapier-make-n8n.html">← Prev: Zapier, Make or n8n</a> &nbsp;·&nbsp; <a href="05-when-it-fails.html">Next: When a step fails →</a></span>
+  </footer>
+
+</main>
+
+<script src="../assets/wf-day.js?v=1"></script>
+<script src="../assets/wf-bench.js?v=2"></script>
+<script src="../assets/app.js?v=1"></script>
+</body>
+</html>

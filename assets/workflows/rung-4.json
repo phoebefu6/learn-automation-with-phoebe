@@ -1,0 +1,259 @@
+{
+  "name": "Order SMS - rung 4 - Plus a dead-letter queue",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Order webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "orders",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "automation-bench-orders"
+    },
+    {
+      "id": "n2",
+      "name": "Is it an order?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.body.type }}",
+              "rightValue": "order",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Shape the message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        200
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "event_id",
+              "value": "={{ $json.body.event_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "customer_id",
+              "value": "={{ $json.body.customer_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "amount",
+              "value": "={{ $json.body.amount }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Look up customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=http://127.0.0.1:8787/crm/customers/{{ $json.customer_id }}?event_id={{ $json.event_id }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "n5",
+      "name": "Send the SMS",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8787/sms/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $('Shape the message').item.json.event_id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_id",
+              "value": "={{ $('Shape the message').item.json.event_id }}"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "text",
+              "value": "=Order {{ $('Shape the message').item.json.event_id }} confirmed, {{ $('Shape the message').item.json.amount }} paid. Thank you."
+            }
+          ]
+        },
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "n6",
+      "name": "Park in dead-letter queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        380
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8787/queue/dead-letter",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "event_id",
+              "value": "={{ $('Shape the message').item.json.event_id }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Order webhook": {
+      "main": [
+        [
+          {
+            "node": "Is it an order?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is it an order?": {
+      "main": [
+        [
+          {
+            "node": "Shape the message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Shape the message": {
+      "main": [
+        [
+          {
+            "node": "Look up customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Look up customer": {
+      "main": [
+        [
+          {
+            "node": "Send the SMS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Park in dead-letter queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send the SMS": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Park in dead-letter queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
